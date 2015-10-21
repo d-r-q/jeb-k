@@ -13,7 +13,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
-        io.latestDir(backupsDir) >> null
+        io.latestDir(new File(backupsDir)) >> null
         def backuper = new Backuper(io)
 
         when:
@@ -23,7 +23,7 @@ class BackuperSpec extends Specification {
 
         1 * io.copy(new File(sourceDir), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
-        1 * io.mv({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
+        1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
     def "when in backups directory already exists some directory, backup should be created on base of this directory"() {
@@ -32,7 +32,7 @@ class BackuperSpec extends Specification {
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
         def existingDir = new File(backupsDir, "2")
-        io.latestDir(backupsDir) >> existingDir
+        io.latestDir(new File(backupsDir)) >> existingDir
         def backuper = new Backuper(io)
 
         when:
@@ -42,14 +42,14 @@ class BackuperSpec extends Specification {
 
         1 * io.sync(new File(sourceDir), existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
-        1 * io.mv({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
+        1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
     def "when hanoi is in solved state, backuper should reset it and continue"() {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[], [], [4, 3, 2, 1]], 15))
         def io = Mock(Io)
-        io.latestDir(backupsDir) >> null
+        io.latestDir(new File(backupsDir)) >> null
         def backuper = new Backuper(io)
         def newBackupDir = new File(backupsDir, "1")
 
@@ -62,14 +62,14 @@ class BackuperSpec extends Specification {
 
         1 * io.copy(new File(sourceDir), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
-        1 * io.mv({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
+        1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
     def "backuper should not remove old disk content, if new backup creation failed"() {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
-        io.latestDir(backupsDir) >> null
+        io.latestDir(new File(backupsDir)) >> null
         def backuper = new Backuper(io)
 
         when:
@@ -82,7 +82,7 @@ class BackuperSpec extends Specification {
             throw new JebExecException("cmd", "stdout", "stderr", 127, null)
         }
         0 * io.remove(newBackupDir)
-        0 * io.mv(_, _)
+        0 * io.move(_, _)
     }
 
 }

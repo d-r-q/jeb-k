@@ -51,7 +51,7 @@ class IoSpek : Spek() {init {
         val io = Io()
         on("move dir") {
 
-            io.mv(from, to)
+            io.move(from, to)
 
             it("should be moved") {
                 shouldBeFalse(from.exists())

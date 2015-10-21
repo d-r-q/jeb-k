@@ -13,7 +13,7 @@ class Backuper(private val io: Io) {
         val disk = hanoi[from].last()
         val newHanoi = hanoi.moveDisk(from, to)
 
-        val latestBackup = io.latestDir(state.backupsDir)
+        val latestBackup = io.latestDir(File(state.backupsDir))
         backupTo(File(state.backupsDir, disk.toString()), File(state.source), latestBackup)
 
         return state.copy(hanoi = newHanoi)
@@ -27,7 +27,7 @@ class Backuper(private val io: Io) {
             io.sync(from, base, tmpTape)
         }
         io.remove(tape)
-        io.mv(tmpTape, tape)
+        io.move(tmpTape, tape)
     }
 
 }

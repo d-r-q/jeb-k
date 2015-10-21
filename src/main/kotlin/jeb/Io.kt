@@ -4,7 +4,7 @@ import java.io.File
 
 open class Io {
 
-    open fun latestDir(dir: String) = File(dir).
+    open fun latestDir(dir: File) = dir.
             listFiles().
             filter { it.isDirectory }.
             maxBy { it.lastModified() }
@@ -17,7 +17,7 @@ open class Io {
     open fun sync(from: File, base: File, to: File) =
             !"rsync -avh --delete --link-dest=${base.absolutePath} ${from.absolutePath}/ ${to.absolutePath}"
 
-    open fun mv(from: File, to: File) =
+    open fun move(from: File, to: File) =
             !"mv ${from.absolutePath} ${to.absolutePath}"
 
     private operator fun String.not() {
