@@ -16,14 +16,16 @@ fun <T> List<T>.moveTo(another: List<T>): Pair<List<T>, List<T>> = Pair(
         ArrayList(another) + (this as Iterable<T>).last())
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class Hanoi @JsonCreator constructor (
+data class Hanoi @JsonCreator constructor (
         val pegs: List<List<Int>>,
         val step: Int) {
 
-    private val moves = listOf(0 to 1, 0 to 2, 1 to 2)
-
     private val descComparator = Comparator { a: Int, b: Int -> b - a }
     private val disks = pegs.fold(sortedSetOf<Int>(descComparator)) { acc, e -> acc.addAll(e); acc }
+
+    private val oddMoves = listOf(0 to 2, 0 to 1, 1 to 2)
+    private val evenMoves = listOf(0 to 1, 0 to 2, 1 to 2)
+    private val moves = if (disks.size() % 2 == 0) evenMoves else oddMoves
 
     val done = pegs[0].size() == 0 && pegs[1].size() == 0
 
