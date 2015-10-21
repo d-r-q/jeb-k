@@ -1,6 +1,7 @@
 package jeb
 
 import java.io.File
+import javax.swing.JOptionPane
 
 val usage = "Usage: java jeb.jeb <init|backup dir>"
 
@@ -28,8 +29,13 @@ private fun init() {
 private fun backup(backupDir: File) {
     val config = File(backupDir, "jeb.json")
     val state = loadState(config)
-    val newState = Backuper(Io()).doBackup(state)
-    saveState(config, newState)
+    try {
+        val newState = Backuper(Io()).doBackup(state)
+        saveState(config, newState)
+    } catch(e: JebExecException) {
+        JOptionPane.showMessageDialog(null, e.toString(), "title", JOptionPane.ERROR_MESSAGE)
+    }
+
 }
 
 private fun readLine(invitation: String): String {
