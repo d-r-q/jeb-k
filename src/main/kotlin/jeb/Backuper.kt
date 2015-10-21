@@ -20,12 +20,14 @@ class Backuper(private val io: Io) {
     }
 
     private fun backupTo(tape: File, from: File, base: File?) {
-        io.remove(tape)
+        val tmpTape = File(tape.parentFile, "${tape.name}-${System.currentTimeMillis()}")
         if (base == null) {
-            io.copy(from, tape)
+            io.copy(from, tmpTape)
         } else {
-            io.sync(from, base, tape)
+            io.sync(from, base, tmpTape)
         }
+        io.remove(tape)
+        io.mv(tmpTape, tape)
     }
 
 }

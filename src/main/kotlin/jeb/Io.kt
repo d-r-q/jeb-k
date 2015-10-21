@@ -20,9 +20,18 @@ open class Io {
     open fun mv(from: File, to: File) =
             !"mv ${from.absolutePath} ${to.absolutePath}"
 
-    private operator fun String.not(): Int {
+    private operator fun String.not() {
         val proc = Runtime.getRuntime().exec(this)
-        return proc.waitFor()
+        val returnCode = proc.waitFor()
+        val stdout = proc.inputStream.bufferedReader().readText()
+        val stderr = proc.errorStream.bufferedReader().readText()
+        if (returnCode != 0 || stderr.isNotBlank()) {
+            throw JebExecException(
+                    cmd = this,
+                    stdout = stdout,
+                    stderr = stderr,
+                    returnCode = returnCode)
+        }
     }
 
 }

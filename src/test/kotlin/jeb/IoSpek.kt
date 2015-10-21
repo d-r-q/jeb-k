@@ -33,7 +33,7 @@ class IoSpek : Spek() {init {
                 shouldBeTrue(dir.contentEqualTo(outerDirCopy))
             }
             it("copy should be separate files") {
-                shouldBeFalse(Files.isSameFile(File(outerDir, "outerFile").toPath(), File(outerDirCopy, "outerFile").toPath()))
+                shouldNotEqual(File(outerDir, "outerFile").inode, File(outerDirCopy, "outerFile").inode)
             }}}
 
 

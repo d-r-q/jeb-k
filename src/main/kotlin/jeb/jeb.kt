@@ -14,11 +14,6 @@ public fun main(args: Array<String>) {
 }
 
 private fun init() {
-    var s = readLine("fsfsa")
-    if (!s.endsWith("/")) {
-        s = "$s/"
-    }
-
     val sourceDir = with(readLine("Source directory: ")) {
         if (this.endsWith('/')) this else "$this/"
     }
