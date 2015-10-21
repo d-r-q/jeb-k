@@ -14,6 +14,8 @@ open class Io {
             filter(predicate).
             any()
 
+    open fun fileExists(file: File) = file.exists()
+
     open fun remove(f: File) = f.deleteRecursively()
 
     open fun copy(from: File, to: File) =
