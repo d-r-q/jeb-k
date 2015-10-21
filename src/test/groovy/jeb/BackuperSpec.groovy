@@ -85,4 +85,22 @@ class BackuperSpec extends Specification {
         0 * io.move(_, _)
     }
 
+    def "backuper should do nothing, if in backups directory exists subdirectory modified today"() {
+        given:
+        def state = new State(backupsDir, sourceDir, new Hanoi([[4,3,2,1], [], []], 0))
+        def io = Mock(Io)
+        io.fileExists(_, _) >> true
+        def backuper = new Backuper(io)
+
+        when:
+        def newState = backuper.doBackup(state)
+
+        then:
+        newState == state
+        0 * io.copy(_, _)
+        0 * io.sync(_, _, _)
+        0 * io.remove(_)
+        0 * io.move(_, _)
+    }
+
 }

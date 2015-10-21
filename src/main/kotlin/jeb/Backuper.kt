@@ -1,10 +1,17 @@
 package jeb
 
 import java.io.File
+import java.time.LocalDate
+import java.time.ZoneId
+import java.util.*
 
 class Backuper(private val io: Io) {
 
     fun doBackup(state: State): State {
+        val modifiedToday = { f: File -> Date(f.lastModified()).toLocalDate() == LocalDate.now() }
+        if (io.fileExists(File(state.backupsDir), modifiedToday)) {
+            return state
+        }
         val hanoi = with(state.hanoi) {
             if (done) reset() else this
         }
@@ -31,3 +38,5 @@ class Backuper(private val io: Io) {
     }
 
 }
+
+private fun Date.toLocalDate() = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()

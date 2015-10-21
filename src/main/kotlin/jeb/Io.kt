@@ -9,6 +9,11 @@ open class Io {
             filter { it.isDirectory }.
             maxBy { it.lastModified() }
 
+    open fun fileExists(dir: File, predicate: (File) -> Boolean) = dir.
+            listFiles().
+            filter(predicate).
+            any()
+
     open fun remove(f: File) = f.deleteRecursively()
 
     open fun copy(from: File, to: File) =
