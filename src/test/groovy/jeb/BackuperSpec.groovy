@@ -14,7 +14,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
-        io.latestDir(new File(backupsDir)) >> null
+        io.lastModifiedDir(new File(backupsDir)) >> null
         io.fileExists(_) >> true
         def backuper = new Backuper(io)
 
@@ -35,7 +35,7 @@ class BackuperSpec extends Specification {
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
         def existingDir = new File(backupsDir, "2")
-        io.latestDir(new File(backupsDir)) >> existingDir
+        io.lastModifiedDir(new File(backupsDir)) >> existingDir
         io.fileExists(_) >> true
         def backuper = new Backuper(io)
 
@@ -54,7 +54,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[], [], [4, 3, 2, 1]], 15))
         def io = Mock(Io)
-        io.latestDir(new File(backupsDir)) >> null
+        io.lastModifiedDir(new File(backupsDir)) >> null
         io.fileExists(_) >> true
         def backuper = new Backuper(io)
         def newBackupDir = new File(backupsDir, "1")
@@ -76,7 +76,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
         def io = Mock(Io)
-        io.latestDir(new File(backupsDir)) >> null
+        io.lastModifiedDir(new File(backupsDir)) >> null
         def backuper = new Backuper(io)
 
         when:
@@ -118,7 +118,7 @@ class BackuperSpec extends Specification {
         def io = Mock(Io)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "4")) >> false
-        io.latestDir(_) >> new File(backupsDir, "2")
+        io.lastModifiedDir(_) >> new File(backupsDir, "2")
         def backuper = new Backuper(io)
 
         when:

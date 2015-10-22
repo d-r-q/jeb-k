@@ -8,7 +8,11 @@ import java.io.File
 data class State @JsonCreator constructor(
         val backupsDir: String,
         val source: String,
-        val hanoi: Hanoi)
+        val hanoi: Hanoi) {
+
+    val lastTapeNumber = hanoi.largestDisc
+
+}
 
 private val objectMapper = ObjectMapper().
         registerModule(ParanamerModule())

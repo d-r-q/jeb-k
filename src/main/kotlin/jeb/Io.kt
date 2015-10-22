@@ -4,7 +4,7 @@ import java.io.File
 
 open class Io {
 
-    open fun latestDir(dir: File) = dir.
+    open fun lastModifiedDir(dir: File) = dir.
             listFiles().
             filter { it.isDirectory }.
             maxBy { it.lastModified() }
