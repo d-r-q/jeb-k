@@ -8,10 +8,21 @@ import java.io.File
 data class State @JsonCreator constructor(
         val backupsDir: String,
         val source: String,
-        val hanoi: Hanoi) {
+        private val hanoi: Hanoi) {
 
     val lastTapeNumber = hanoi.largestDisc
 
+    fun selectTape(): Pair<State, Int> {
+        val hanoi = with(hanoi) {
+            if (done) reset() else this
+        }
+
+        val (from, to) = hanoi.nextMove()
+        val disk = hanoi[from].last()
+        val newHanoi = hanoi.moveDisk(from, to)
+
+        return Pair(copy(hanoi = newHanoi), disk)
+    }
 }
 
 private val objectMapper = ObjectMapper().

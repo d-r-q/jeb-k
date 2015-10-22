@@ -12,7 +12,7 @@ class Backuper(private val io: Io) {
             return state
         }
 
-        val (newState, nextTapeNum) = selectTape(state)
+        val (newState, nextTapeNum) = state.selectTape()
 
         val lastBackup = io.lastModifiedDir(File(state.backupsDir))
         val fromDir = File(state.source)
@@ -20,34 +20,22 @@ class Backuper(private val io: Io) {
         val tape = File(state.backupsDir, nextTapeNum.toString())
         val tmpTape = File(tape.parentFile, "${tape.name}-${System.currentTimeMillis()}")
 
-        createBackup(fromDir, lastBackup, tmpTape)
-        prepareTape(tape, lastTape)
-        io.move(tmpTape, tape)
+        createBackup(from = fromDir, base = lastBackup, to = tmpTape)
+        prepareTape(tape = tape, lastTape = lastTape)
+        io.move(from = tmpTape, to = tape)
 
         return newState
     }
 
-    private fun createBackup(fromDir: File, latestBackup: File?, to: File) {
-        if (latestBackup == null) io.copy(fromDir, to)
-        else io.sync(fromDir, latestBackup, to)
+    private fun createBackup(from: File, base: File?, to: File) {
+        if (base == null) io.copy(from, to)
+        else io.sync(from, base, to)
     }
 
     private fun prepareTape(tape: File, lastTape: File) {
         if (io.fileExists(lastTape)) io.remove(tape)
         else io.move(tape, lastTape)
     }
-}
-
-private fun selectTape(state: State): Pair<State, Int> {
-    val hanoi = with(state.hanoi) {
-        if (done) reset() else this
-    }
-
-    val (from, to) = hanoi.nextMove()
-    val disk = hanoi[from].last()
-    val newHanoi = hanoi.moveDisk(from, to)
-
-    return Pair(state.copy(hanoi = newHanoi), disk)
 }
 
 private fun modifiedToday(f: File) = Date(f.lastModified()).toLocalDate() == LocalDate.now()
