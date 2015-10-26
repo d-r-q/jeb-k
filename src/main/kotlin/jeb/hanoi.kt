@@ -12,7 +12,7 @@ operator fun List<Int>.compareTo(another: List<Int>) = when {
 }
 
 fun <T> List<T>.moveTo(another: List<T>): Pair<List<T>, List<T>> = Pair(
-        this.subList(0, this.size() - 1),
+        this.subList(0, this.size - 1),
         ArrayList(another) + (this as Iterable<T>).last())
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -25,8 +25,8 @@ data class Hanoi @JsonCreator constructor (
     private val oddMoves = listOf(0 to 2, 0 to 1, 1 to 2)
 
     private val evenMoves = listOf(0 to 1, 0 to 2, 1 to 2)
-    private val moves = if (disks.size() % 2 == 0) evenMoves else oddMoves
-    val done = pegs[0].size() == 0 && pegs[1].size() == 0
+    private val moves = if (disks.size % 2 == 0) evenMoves else oddMoves
+    val done = pegs[0].size == 0 && pegs[1].size == 0
 
     val largestDisc = disks.first()
 

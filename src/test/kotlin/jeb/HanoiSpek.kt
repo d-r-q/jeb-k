@@ -1,7 +1,6 @@
 package jeb
 
 import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.givenData
 import org.jetbrains.spek.api.shouldBeTrue
 import org.jetbrains.spek.api.shouldEqual
 

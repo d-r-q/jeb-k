@@ -7,7 +7,7 @@ val usage = "Usage: java jeb.jeb <init|backup dir>"
 
 public fun main(args: Array<String>) {
     when {
-        args.size() == 0 -> println(usage)
+        args.size == 0 -> println(usage)
         args[0] == "init" -> init()
         args[0] == "backup" -> backup(File(args[1]))
         else -> println(usage)
