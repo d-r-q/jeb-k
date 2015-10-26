@@ -4,9 +4,9 @@ import java.io.File
 
 open class Io {
 
-    open fun lastModifiedDir(dir: File) = dir.
+    open fun lastModified(dir: File, predicate: (File) -> Boolean) = dir.
             listFiles().
-            filter { it.isDirectory }.
+            filter { predicate(it) }.
             maxBy { it.lastModified() }
 
     open fun fileExists(dir: File, predicate: (File) -> Boolean) = dir.

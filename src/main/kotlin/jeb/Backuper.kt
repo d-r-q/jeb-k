@@ -8,13 +8,13 @@ import java.util.*
 class Backuper(private val io: Io) {
 
     public fun doBackup(state: State): State {
-        if (io.fileExists(File(state.backupsDir), ::dirModifiedToday)) {
+        if (io.fileExists(File(state.backupsDir), { isTape(it, state) && modifiedToday(it) })) {
             return state
         }
 
         val (newState, nextTapeNum) = state.selectTape()
 
-        val lastBackup = io.lastModifiedDir(File(state.backupsDir))
+        val lastBackup = io.lastModified(File(state.backupsDir), { isTape(it, state) })
         val fromDir = File(state.source)
         val lastTape = File(state.backupsDir, state.lastTapeNumber.toString())
         val tape = File(state.backupsDir, nextTapeNum.toString())
@@ -40,6 +40,16 @@ class Backuper(private val io: Io) {
     }
 }
 
-private fun dirModifiedToday(f: File) = f.isDirectory && Date(f.lastModified()).toLocalDate() == LocalDate.now()
+private fun modifiedToday(f: File) =
+        Date(f.lastModified()).toLocalDate() == LocalDate.now()
+
 
 private fun Date.toLocalDate() = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+
+private fun isTape(f: File, state: State) =
+        try {
+            val tapeNum = f.name.toInt()
+            f.isDirectory && tapeNum > 0 && tapeNum <= state.lastTapeNumber
+        } catch (e: NumberFormatException) {
+            false
+        }
