@@ -8,7 +8,7 @@ import java.util.*
 class Backuper(private val io: Io) {
 
     public fun doBackup(state: State): State {
-        if (io.fileExists(File(state.backupsDir), ::modifiedToday)) {
+        if (io.fileExists(File(state.backupsDir), ::dirModifiedToday)) {
             return state
         }
 
@@ -38,6 +38,6 @@ class Backuper(private val io: Io) {
     }
 }
 
-private fun modifiedToday(f: File) = Date(f.lastModified()).toLocalDate() == LocalDate.now()
+private fun dirModifiedToday(f: File) = f.isDirectory && Date(f.lastModified()).toLocalDate() == LocalDate.now()
 
 private fun Date.toLocalDate() = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
