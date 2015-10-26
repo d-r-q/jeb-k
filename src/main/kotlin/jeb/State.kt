@@ -23,16 +23,24 @@ data class State @JsonCreator constructor(
 
         return Pair(copy(hanoi = newHanoi), disk)
     }
-}
 
-private val objectMapper = ObjectMapper().
-        registerModule(ParanamerModule())
+    companion object {
 
-fun loadState(configFile: File): State {
-    return objectMapper.readValue(configFile.readText(), State::class.java)
-}
+        private val objectMapper = ObjectMapper().
+                registerModule(ParanamerModule())
 
-fun saveState(configFile: File, state: State) {
-    configFile.parentFile.mkdirs()
-    configFile.writeText(objectMapper.writeValueAsString(state))
+        @JvmStatic fun loadState(configFile: File): State {
+            return objectMapper.readValue(configFile.readText(), State::class.java)
+        }
+
+        @JvmStatic fun saveState(configFile: File, state: State) {
+            configFile.parentFile.mkdirs()
+            val stateMap = mapOf(
+                    "backupsDir" to state.backupsDir,
+                    "source" to state.source,
+                    "hanoi" to state.hanoi)
+            configFile.writeText(objectMapper.writeValueAsString(stateMap))
+        }
+    }
+
 }

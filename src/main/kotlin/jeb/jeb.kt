@@ -23,15 +23,15 @@ private fun init() {
     val disksCount = readLine("Backups count: ").toInt()
 
     val state = State(backupDir, sourceDir, Hanoi(listOf((disksCount downTo 1).toList(), emptyList(), emptyList()), 0))
-    saveState(File(backupDir, "jeb.json"), state)
+    State.saveState(File(backupDir, "jeb.json"), state)
 }
 
 private fun backup(backupDir: File) {
     val config = File(backupDir, "jeb.json")
-    val state = loadState(config)
+    val state = State.loadState(config)
     try {
         val newState = Backuper(Io()).doBackup(state)
-        saveState(config, newState)
+        State.saveState(config, newState)
     } catch(e: JebExecException) {
         JOptionPane.showMessageDialog(null, e.toString(), "title", JOptionPane.ERROR_MESSAGE)
     }
