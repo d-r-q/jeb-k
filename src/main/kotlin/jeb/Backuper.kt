@@ -21,7 +21,9 @@ class Backuper(private val io: Io) {
         val tmpTape = File(tape.parentFile, "${tape.name}-${System.currentTimeMillis()}")
 
         createBackup(from = fromDir, base = lastBackup, to = tmpTape)
-        prepareTape(tape = tape, lastTape = lastTape)
+        if (io.fileExists(tape)) {
+            prepareTape(tape = tape, lastTape = lastTape)
+        }
         io.move(from = tmpTape, to = tape)
 
         return newState

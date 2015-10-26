@@ -130,4 +130,25 @@ class BackuperSpec extends Specification {
         1 * io.move({ it.absolutePath.startsWith("$backupsDir/1-")}, new File(backupsDir, "1"))
     }
 
+    @SuppressWarnings("GroovyAssignabilityCheck")
+    def "backuper should not prepare tape if it's not exists"() {
+
+        given:
+        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
+        def io = Mock(Io)
+        io.fileExists(_, _) >> false
+        io.fileExists(new File(backupsDir, "4")) >> false
+        def backuper = new Backuper(io)
+
+        when:
+        backuper.doBackup(state)
+
+        then:
+        1 * io.copy(_, _)
+        1 * io.move(_, new File(backupsDir, "1"))
+
+        0 * io.sync(_, _, _)
+        0 * io.remove(_)
+        0 * io.move(_, new File(backupsDir, "4"))
+    }
 }
