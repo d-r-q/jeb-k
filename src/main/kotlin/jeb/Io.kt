@@ -2,6 +2,7 @@ package jeb
 
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.util.*
 
 open class Io {
 
@@ -34,26 +35,44 @@ open class Io {
         log.debug("Executing command: $this")
         val proc = Runtime.getRuntime().exec(this)
         val returnCode = proc.waitFor()
-        val stdout = proc.inputStream.bufferedReader().readText()
-        val stderr = proc.errorStream.bufferedReader().readText()
+        val stdoutLines = LinkedList<String>()
+        val stderrLines = LinkedList<String>()
+        proc.inputStream.bufferedReader().lines().forEach(handleStdOutputLine(stdoutLines, OutputType.STDOUT))
+        proc.errorStream.bufferedReader().lines().forEach(handleStdOutputLine(stderrLines, OutputType.STDERR))
         log.debug("""
         returnCode=$returnCode
         stdout:
         ======
-        $stdout
+        ${stdoutLines.joinToString("\n")}
         ======
         stderr:
         ======
-        $stderr
+        ${stderrLines.joinToString("\n")}
         ======
         """.trimIndent())
-        if (returnCode != 0 || stderr.isNotBlank()) {
+        if (returnCode != 0 || stderrLines.isNotEmpty()) {
             throw JebExecException(
                     cmd = this,
-                    stdout = stdout,
-                    stderr = stderr,
+                    stdout = stdoutLines.joinToString("\n"),
+                    stderr = stderrLines.joinToString("\n"),
                     returnCode = returnCode)
         }
     }
 
+    private fun handleStdOutputLine(buffer: LinkedList<String>, type: OutputType): (String) -> Unit = {
+        val msg = "[$type]: $it"
+        when (type) {
+            OutputType.STDOUT -> log.debug(msg)
+            OutputType.STDERR -> log.error(msg)
+            else -> throw AssertionError("Unknown type: $type")
+        }
+
+        buffer.add(it)
+        if (buffer.size > 1000) {
+            buffer.removeFirst()
+        }
+    }
+
+    private enum class OutputType{ STDOUT, STDERR }
 }
+
