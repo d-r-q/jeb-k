@@ -34,11 +34,11 @@ open class Io {
     private operator fun String.not() {
         log.debug("Executing command: $this")
         val proc = Runtime.getRuntime().exec(this)
-        val returnCode = proc.waitFor()
         val stdoutLines = LinkedList<String>()
         val stderrLines = LinkedList<String>()
         proc.inputStream.bufferedReader().lines().forEach(handleStdOutputLine(stdoutLines, OutputType.STDOUT))
         proc.errorStream.bufferedReader().lines().forEach(handleStdOutputLine(stderrLines, OutputType.STDERR))
+        val returnCode = proc.waitFor()
         log.debug("""
         returnCode=$returnCode
         stdout:
