@@ -6,12 +6,12 @@ class FileDescr(
         name: File,
         fileContent: () -> String) : Node(name) {
 
-    private val content = lazy { fileContent() }
+    private val content by lazy { fileContent() }
 
     override fun create() {
-        name.writeText(content.value)
+        name.writeText(content)
     }
 
-    override fun contentEqualTo(file: File) = file.isFile && content.value == file.readText()
+    override fun contentEqualTo(file: File) = file.isFile && content == file.readText()
 
 }
