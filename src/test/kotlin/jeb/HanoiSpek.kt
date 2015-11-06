@@ -7,14 +7,13 @@ import org.jetbrains.spek.api.shouldEqual
 class HanoiSpek : Spek() {init {
 
         given("4-disk hanoi tower") {
-            val hanoi = Hanoi(listOf(listOf(4, 3, 2, 1), emptyList<Int>(), emptyList<Int>()), 0)
+            val hanoi = Hanoi(4)
 
             on("iteration until done") {
                 tailrec fun solve(hanoi: Hanoi): Hanoi = when {
                     hanoi.done -> hanoi
                     else -> {
-                        val (from, to) = hanoi.nextMove()
-                        solve(hanoi.moveDisk(from, to))
+                        solve(hanoi.moveDisk().first)
                     }
                 }
 

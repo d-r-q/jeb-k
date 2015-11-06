@@ -24,7 +24,7 @@ class IoSpek : Spek() {init {
         }
         dir.create()
 
-        val io = Io()
+        val io = Storage()
         on("copy outer dir") {
 
             io.copy(outerDir, outerDirCopy)
@@ -48,7 +48,7 @@ class IoSpek : Spek() {init {
         }
         dir.create()
 
-        val io = Io()
+        val io = Storage()
         on("move dir") {
 
             io.move(from, to)
@@ -83,7 +83,7 @@ class IoSpek : Spek() {init {
             file("deleted") { "deletedContent" }
         }.create()
 
-        val io = Io()
+        val io = Storage()
         on("sync dir") {
             io.sync(origin, base, backup)
             it("backup dir should be equal to origin") {

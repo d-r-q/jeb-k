@@ -1,19 +1,17 @@
 package jeb
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.slf4j.LoggerFactory
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Hanoi @JsonCreator constructor(
+data class Hanoi private constructor(
         val pegs: List<List<Int>>,
         val step: Int) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    private val diskComparator = Comparator { a: Int, b: Int -> b - a }
-    private val disks = pegs.fold(sortedSetOf<Int>(diskComparator)) { acc, e -> acc.addAll(e); acc }
+    private val disks = pegs.fold(hashSetOf<Int>()) { acc, e -> acc.addAll(e); acc }.sortedDescending()
 
     private val oddMoves = listOf(0 to 2, 0 to 1, 1 to 2)
     private val evenMoves = listOf(0 to 1, 0 to 2, 1 to 2)
@@ -23,13 +21,25 @@ data class Hanoi @JsonCreator constructor(
 
     val largestDisc = disks.first()
 
-    fun reset(): Hanoi {
-        val resetHanoi = Hanoi(listOf(disks.toList(), emptyList(), emptyList()), 0)
-        log.debug("Resetting hanoi, new hanoi: $resetHanoi")
-        return resetHanoi
+    constructor(disksCount: Int) : this(listOf(createPeg(disksCount), emptyList(), emptyList()), 0)
+
+    fun reset() = Hanoi(disks.size)
+
+    fun moveDisk(): Pair<Hanoi, Int> {
+        val (from, to) = nextMove()
+        log.debug("Moving disk from $from to $to with pegs: $pegs")
+
+        val newPegs = ArrayList(pegs)
+        with(pegs[from]) {
+            newPegs[from] = subList(0, size - 1)
+            newPegs[to] = ArrayList(pegs[to]) + last()
+        }
+
+        log.debug("New pegs: $newPegs")
+        return Pair(Hanoi(newPegs, step + 1), newPegs[to].last())
     }
 
-    fun nextMove(): Pair<Int, Int> {
+    private fun nextMove(): Pair<Int, Int> {
         val (peg1, peg2) = moves[step % 3]
         log.debug("Pegs for move on $step step: $peg1 and $peg2")
         return if (pegs[peg2] > pegs[peg1]) {
@@ -39,29 +49,14 @@ data class Hanoi @JsonCreator constructor(
         }
     }
 
-    fun moveDisk(from: Int, to: Int): Hanoi {
-
-        log.debug("Moving disk from $from to $to with pegs: $pegs")
-        val source = pegs[from]
-        val (newSource, dest) = source.moveTo(pegs[to])
-
-        val newPegs = ArrayList(pegs)
-        newPegs[from] = newSource
-        newPegs[to] = dest
-        log.debug("New pegs: $newPegs")
-        return Hanoi(newPegs, step + 1)
-    }
-
     operator fun get(pegIdx: Int) = pegs[pegIdx]
 }
 
-operator fun List<Int>.compareTo(another: List<Int>) = when {
+private operator fun List<Int>.compareTo(another: List<Int>) = when {
     this.isEmpty() && another.isEmpty() -> 0
     this.isEmpty() -> 1
     another.isEmpty() -> -1
     else -> this.last() - another.last()
 }
 
-fun <T> List<T>.moveTo(another: List<T>): Pair<List<T>, List<T>> = Pair(
-        this.subList(0, this.size - 1),
-        ArrayList(another) + this[this.lastIndex])
+fun createPeg(disksCount: Int): List<Int> = (disksCount downTo 1).toList()

@@ -17,9 +17,7 @@ data class State @JsonCreator constructor(
             if (done) reset() else this
         }
 
-        val (from, to) = hanoi.nextMove()
-        val disk = hanoi[from].last()
-        val newHanoi = hanoi.moveDisk(from, to)
+        val (newHanoi, disk) = hanoi.moveDisk()
 
         return Pair(copy(hanoi = newHanoi), disk)
     }

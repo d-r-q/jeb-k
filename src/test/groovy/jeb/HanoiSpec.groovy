@@ -10,8 +10,7 @@ class HanoiSpec extends Specification {
 
         when:
         while (!hanoi.done) {
-            def move = hanoi.nextMove()
-            hanoi = hanoi.moveDisk(move.first, move.second)
+            hanoi = hanoi.moveDisk().first
         }
 
         then:

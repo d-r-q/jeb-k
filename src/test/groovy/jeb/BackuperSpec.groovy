@@ -12,8 +12,8 @@ class BackuperSpec extends Specification {
     def "on initial backup, backuper should create new backup, remove old disk content and move backup into freed disk"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         io.fileExists(_) >> true
         def backuper = new Backuper(io)
@@ -32,8 +32,8 @@ class BackuperSpec extends Specification {
     def "when in backups directory already exists some directory, backup should be created on base of this directory"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def io = Mock(Storage)
         def existingDir = new File(backupsDir, "2")
         io.lastModified(new File(backupsDir), _) >> existingDir
         io.fileExists(_) >> true
@@ -52,8 +52,8 @@ class BackuperSpec extends Specification {
     @SuppressWarnings("GroovyAssignabilityCheck")
     def "when hanoi is in solved state, backuper should reset it and continue"() {
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[], [], [4, 3, 2, 1]], 15))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, Hanois.createHanoi(4, 15))
+        def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         io.fileExists(_) >> true
         def backuper = new Backuper(io)
@@ -74,8 +74,8 @@ class BackuperSpec extends Specification {
     @SuppressWarnings("GroovyAssignabilityCheck")
     def "backuper should not remove old disk content, if new backup creation failed"() {
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         def backuper = new Backuper(io)
 
@@ -95,8 +95,8 @@ class BackuperSpec extends Specification {
     @SuppressWarnings("GroovyAssignabilityCheck")
     def "backuper should do nothing, if in backups directory exists subdirectory modified today"() {
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def io = Mock(Storage)
         io.fileExists(_, _) >> true
         def backuper = new Backuper(io)
 
@@ -114,8 +114,8 @@ class BackuperSpec extends Specification {
     @SuppressWarnings(["GroovyAssignabilityCheck", "GroovyAssignabilityCheck"])
     def "backuper should move old disk content to biggest disk if it's empty, instead of just removing it"() {
 
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3], [1], [2]], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, Hanois.createHanoi(4, 2))
+        def io = Mock(Storage)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "4")) >> false
         io.fileExists(new File(backupsDir, "1")) >> true
@@ -135,8 +135,8 @@ class BackuperSpec extends Specification {
     def "backuper should not prepare tape if it's not exists"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi([[4, 3, 2, 1], [], []], 0))
-        def io = Mock(Io)
+        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def io = Mock(Storage)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "4")) >> false
         def backuper = new Backuper(io)

@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
 
-open class Io {
+open class Storage {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -40,15 +40,15 @@ open class Io {
         proc.errorStream.bufferedReader().lines().forEach(handleStdOutputLine(stderrLines, OutputType.STDERR))
         val returnCode = proc.waitFor()
         log.debug("""
-        returnCode=$returnCode
-        stdout:
-        ======
-        ${stdoutLines.joinToString("\n")}
-        ======
-        stderr:
-        ======
-        ${stderrLines.joinToString("\n")}
-        ======
+            returnCode=$returnCode
+            stdout:
+            ======
+            ${stdoutLines.joinToString("\n")}
+            ======
+            stderr:
+            ======
+            ${stderrLines.joinToString("\n")}
+            ======
         """.trimIndent())
         if (returnCode != 0 || stderrLines.isNotEmpty()) {
             throw JebExecException(
