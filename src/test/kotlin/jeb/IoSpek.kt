@@ -3,8 +3,6 @@ package jeb
 import jeb.ddsl.dir
 import org.jetbrains.spek.api.*
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
 
 class IoSpek : Spek() {init {
 
@@ -98,10 +96,3 @@ class IoSpek : Spek() {init {
                 shouldNotEqual(originNew.inode, backupNew.inode)
             }}}}}
 
-private val File.inode: String
-    get() {
-        val attr = Files.readAttributes(this.toPath(), BasicFileAttributes::class.java)
-        return with(attr.fileKey().toString()) {
-            substring(indexOf("ino=") + 4, indexOf(")"))
-        }
-    }

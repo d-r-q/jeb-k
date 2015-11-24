@@ -28,8 +28,18 @@ open class Storage {
     open fun sync(from: File, base: File, to: File) =
             !"rsync -avh --delete --link-dest=${base.absolutePath} ${from.absolutePath}/ ${to.absolutePath}"
 
-    open fun move(from: File, to: File) =
-            !"mv ${from.absolutePath} ${to.absolutePath}"
+    open fun move(from: File, to: File) {
+        !"mv ${from.absolutePath} ${to.absolutePath}"
+        to.setLastModified(System.currentTimeMillis())
+    }
+
+    open fun findOne(dir: File, predicate: (File) -> Boolean): File? {
+        val res = dir.
+                listFiles().
+                filter(predicate)
+        assert(res.size <= 1, { -> "To many files mathes predicate: $res"})
+        return res.firstOrNull()
+    }
 
     private operator fun String.not() {
         log.debug("Executing command: $this")
@@ -74,5 +84,6 @@ open class Storage {
     }
 
     private enum class OutputType{ STDOUT, STDERR }
+
 }
 

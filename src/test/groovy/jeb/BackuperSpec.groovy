@@ -4,6 +4,7 @@ import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @SuppressWarnings("GroovyAssignabilityCheck")
@@ -14,14 +15,15 @@ class BackuperSpec extends Specification {
     public static final String sourceDir = "/tmp/source"
     public static final File newBackupDir = new File(backupsDir, "$now-1")
 
-    def "on initial backup, backuper should create new backup, remove old disk content and move backup into freed disk"() {
+    def "on initial backup, backuper should create new backup, not remove old disk content and move backup into freed disk"() {
 
         given:
         def state = new State(backupsDir, sourceDir, new Hanoi(4))
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
-        io.fileExists(_) >> true
-        def backuper = new Backuper(io)
+        io.findOne(_, _) >> null
+        io.findOne(_, _) >> null
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         backuper.doBackup(state)
@@ -29,7 +31,7 @@ class BackuperSpec extends Specification {
         then:
 
         1 * io.copy(new File(sourceDir), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
-        1 * io.remove(newBackupDir)
+        0 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
@@ -39,9 +41,11 @@ class BackuperSpec extends Specification {
         def state = new State(backupsDir, sourceDir, new Hanoi(4))
         def io = Mock(Storage)
         def existingDir = new File(backupsDir, "$now-2")
+        def oldBackupDir = new File("any file")
         io.lastModified(new File(backupsDir), _) >> existingDir
         io.fileExists(_) >> true
-        def backuper = new Backuper(io)
+        io.findOne(_, _) >>> [existingDir, oldBackupDir]
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         backuper.doBackup(state)
@@ -49,7 +53,7 @@ class BackuperSpec extends Specification {
         then:
 
         1 * io.sync(new File(sourceDir), existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
-        1 * io.remove(newBackupDir)
+        1 * io.remove(oldBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
@@ -59,7 +63,8 @@ class BackuperSpec extends Specification {
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         io.fileExists(_) >> true
-        def backuper = new Backuper(io)
+        io.findOne(_, _) >>> [new File("any"), newBackupDir]
+        def backuper = new Backuper(io, LocalDateTime.now())
         def newBackupDir = new File(backupsDir, "$now-1")
 
         when:
@@ -79,7 +84,7 @@ class BackuperSpec extends Specification {
         def state = new State(backupsDir, sourceDir, new Hanoi(4))
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
-        def backuper = new Backuper(io)
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         backuper.doBackup(state)
@@ -99,7 +104,7 @@ class BackuperSpec extends Specification {
         def state = new State(backupsDir, sourceDir, new Hanoi(4))
         def io = Mock(Storage)
         io.fileExists(_, _) >> true
-        def backuper = new Backuper(io)
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         def newState = backuper.doBackup(state)
@@ -120,7 +125,8 @@ class BackuperSpec extends Specification {
         io.fileExists(new File(backupsDir, "$now-4")) >> false
         io.fileExists(new File(backupsDir, "$now-1")) >> true
         io.lastModified(_, _) >> new File(backupsDir, "$now-2")
-        def backuper = new Backuper(io)
+        io.findOne(_, _) >>> [new File(backupsDir, "$now-4"), new File(backupsDir, "$now-1")]
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         backuper.doBackup(state)
@@ -140,7 +146,7 @@ class BackuperSpec extends Specification {
         def io = Mock(Storage)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "$now-4")) >> false
-        def backuper = new Backuper(io)
+        def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
         backuper.doBackup(state)
@@ -166,7 +172,7 @@ class BackuperSpec extends Specification {
         f.mkdirs()
         f.deleteOnExit()
 
-        def s = new State("any", "any", Hanois.createHanoi(3, 0))
+        def s = new State("any", "any", Hanois.createHanoi(13, 0))
 
         when:
         def isTape = BackuperKt.isTape(f, s)
@@ -182,21 +188,21 @@ class BackuperSpec extends Specification {
 
         "20151118--1"  | false
         "20151118-0"   | false
-        "20151118-4"   | false
+        "20151118-14"   | false
         "20151118-nan" | false
 
         "20151118 -1"  | false
         "20151118 0"   | false
         "20151118 1"   | false
         "20151118 3"   | false
-        "20151118 4"   | false
+        "20151118 14"   | false
         "20151118 nan" | false
 
         "2015111--1"   | false
         "2015111-0"    | false
         "2015111-1"    | false
         "2015111-3"    | false
-        "2015111-4"    | false
+        "2015111-14"    | false
         "2015111-nan"  | false
 
     }

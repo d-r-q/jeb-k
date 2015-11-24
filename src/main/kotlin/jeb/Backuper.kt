@@ -2,13 +2,13 @@ package jeb
 
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.text.Regex
 
-class Backuper(private val storage: Storage) {
+class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -23,9 +23,10 @@ class Backuper(private val storage: Storage) {
 
         val lastBackup = storage.lastModified(File(state.backupsDir), { isTape(it, state) })
         val fromDir = File(state.source)
-        val lastTape = File(state.backupsDir, toFileName(state.lastTapeNumber))
+        val lastTape = storage.findOne(File(state.backupsDir), fileForTape(state, state.lastTapeNumber)) ?: File(state.backupsDir, toFileName(state.lastTapeNumber))
         val tape = File(state.backupsDir, toFileName(nextTapeNum))
-        val tmpTape = File(tape.parentFile, "${tape.name}-${System.currentTimeMillis()}")
+        val prevTape = storage.findOne(File(state.backupsDir), fileForTape(state, nextTapeNum))
+        val tmpTape = File(tape.parentFile, "${tape.name}-${now.toEpochMilli()}")
         log.debug("""
             lastBackup=$lastBackup
             fromDir=$fromDir
@@ -35,8 +36,8 @@ class Backuper(private val storage: Storage) {
         """.trimIndent())
 
         createBackup(from = fromDir, base = lastBackup, to = tmpTape)
-        if (storage.fileExists(tape)) {
-            prepareTape(tape = tape, lastTape = lastTape)
+        if (prevTape != null) {
+            prepareTape(tape = prevTape, lastTape = lastTape)
         }
         log.info("Moving backup from $tmpTape to $tape")
         storage.move(from = tmpTape, to = tape)
@@ -63,24 +64,29 @@ class Backuper(private val storage: Storage) {
             storage.move(tape, lastTape)
         }
     }
+
+    private fun modifiedToday(f: File) =
+            Date(f.lastModified()).toLocalDate() == now.toLocalDate()
+
+    private fun toFileName(tapeNum: Int) = "${now.format(DateTimeFormatter.BASIC_ISO_DATE)}-$tapeNum"
+
 }
-
-private fun modifiedToday(f: File) =
-        Date(f.lastModified()).toLocalDate() == LocalDate.now()
-
 
 private fun Date.toLocalDate() = this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
 
-fun isTape(f: File, state: State): Boolean {
+private fun LocalDateTime.toEpochMilli() = this.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+private fun isTape(f: File, state: State): Boolean {
     if (!f.isDirectory) {
         return false
     }
 
     val maxTapeDigits = state.lastTapeNumber.toString().length
-    val pattern = """\d{8}-(\d{$maxTapeDigits})"""
+    val pattern = """\d{8}-(\d{1,$maxTapeDigits})"""
     val tapeNum = Regex(pattern).matchEntire(f.name)?.groups?.get(1)?.value?.toInt()
     return tapeNum?.let { it > 0 && it <= state.lastTapeNumber } ?: false
 }
 
-private fun toFileName(tapeNum: Int) = "${LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)}-${tapeNum}"
+
+private fun fileForTape(state: State, tape: Int): (File) -> Boolean = { isTape(it, state) && it.absolutePath.endsWith("-$tape") }
 
