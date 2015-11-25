@@ -11,6 +11,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class JebSpec {
 
@@ -60,7 +61,7 @@ class JebSpec {
 
         main(arrayOf("backup", backupsDir.absolutePath))
         Thread.sleep(1000)
-        srcContent.contentEqualTo(backup1)
+        assertTrue(srcContent.contentEqualTo(backup1))
         forSameFiles(srcDir, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
 
         File(srcDir, "file3").writeText("content3")
@@ -91,7 +92,7 @@ class JebSpec {
 
     @After
     fun tearDown() {
-        baseDir.deleteRecursively()
+        //baseDir.deleteRecursively()
     }
 }
 

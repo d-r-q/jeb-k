@@ -47,11 +47,11 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
     private fun createBackup(from: File, base: File?, to: File) {
         if (base == null) {
-            log.info("Base backup not found, creating original backup")
-            storage.copy(from, to)
+            log.info("Base backup not found, creating full backup")
+            storage.fullBackup(from, to)
         } else {
-            log.info("Base backup found at $base")
-            storage.sync(from, base, to)
+            log.info("Base backup found at $base, creating incremental backup")
+            storage.incBackup(from, base, to)
         }
     }
 

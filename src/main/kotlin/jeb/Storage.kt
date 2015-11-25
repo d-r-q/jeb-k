@@ -22,10 +22,10 @@ open class Storage {
 
     open fun remove(f: File) = f.deleteRecursively()
 
-    open fun copy(from: File, to: File) =
-            !"cp -r ${from.absolutePath} ${to.absolutePath}"
+    open fun fullBackup(from: File, to: File) =
+            !"rsync -avh --delete ${from.absolutePath}/ ${to.absolutePath}"
 
-    open fun sync(from: File, base: File, to: File) =
+    open fun incBackup(from: File, base: File, to: File) =
             !"rsync -avh --delete --link-dest=${base.absolutePath} ${from.absolutePath}/ ${to.absolutePath}"
 
     open fun move(from: File, to: File) {
