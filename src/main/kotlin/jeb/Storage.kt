@@ -23,10 +23,28 @@ open class Storage {
     open fun remove(f: File) = f.deleteRecursively()
 
     open fun fullBackup(from: File, to: File) =
-            !"rsync -avh --delete ${from.absolutePath}/ ${to.absolutePath}"
+            rsync(from, null, to)
 
     open fun incBackup(from: File, base: File, to: File) =
-            !"rsync -avh --delete --link-dest=${base.absolutePath} ${from.absolutePath}/ ${to.absolutePath}"
+            rsync(from, base, to)
+
+    private fun rsync(from: File, base: File?, to: File) =
+            try {
+                !"rsync -avh --delete ${ base?.let { "--link-dest=" + it.absolutePath } ?: ""} ${from.absolutePath}/ ${to.absolutePath}"
+            } catch (e: JebExecException) {
+                if (e.stderr.contains("vanished") && e.stderr.contains("/.sync/status")) {
+                    // it's workaround for case, when service's status file has been changed, while syncing
+                    // it's harmless and in this case follow output printed:
+                    // file has vanished: "/data/yandex-disk/.sync/status"
+                    // rsync warning: some files vanished before they could be transferred (code 24) at main.c(1183) [sender=3.1.0]
+
+                    // Do nothing in this case
+                    log.warn("Rsync error ignored")
+                    log.warn(e.toString())
+                } else {
+                    throw e
+                }
+            }
 
     open fun move(from: File, to: File) {
         !"mv ${from.absolutePath} ${to.absolutePath}"
