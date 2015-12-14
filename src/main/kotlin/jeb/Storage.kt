@@ -30,6 +30,7 @@ open class Storage {
 
     open fun move(from: File, to: File) {
         !"mv ${from.absolutePath} ${to.absolutePath}"
+        Thread.sleep(1000) // Dirty hack for functional test...
         to.setLastModified(System.currentTimeMillis())
     }
 

@@ -60,7 +60,6 @@ class JebSpec {
         srcContent.create()
 
         main(arrayOf("backup", backupsDir.absolutePath))
-        Thread.sleep(1000)
         assertTrue(srcContent.contentEqualTo(backup1))
         forSameFiles(srcDir, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
 
@@ -74,7 +73,6 @@ class JebSpec {
 
         val secondState = State.loadState(stateFile)
         val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState)
-        Thread.sleep(1000)
         State.saveState(stateFile, thirdState)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
 
