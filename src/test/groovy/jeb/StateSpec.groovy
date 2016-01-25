@@ -14,7 +14,7 @@ class StateSpec extends Specification {
         def loadedState = State.loadState(file)
 
         then:
-        originalState == loadedState
+        originalState == loadedState.result
     }
 
 }

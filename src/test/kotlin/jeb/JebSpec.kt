@@ -6,7 +6,9 @@ import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Test
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
@@ -42,7 +44,7 @@ class JebSpec {
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
         main(arrayOf("init"))
 
-        val state = State.loadState(stateFile)
+        val state = State.loadState(stateFile).result
         assertEquals(srcDir.absolutePath + "/", state.source)
         assertEquals(backupsDir.absolutePath, state.backupsDir)
         assertEquals(10, state.lastTapeNumber)
@@ -67,11 +69,11 @@ class JebSpec {
 
         main(arrayOf("backup", backupsDir.absolutePath))
         MatcherAssert.assertThat(backupsDir.listFiles().map { it.name }, Matchers.containsInAnyOrder("$nowStr-1", "jeb.json"))
-        with (State.loadState(stateFile)) {
+        with (State.loadState(stateFile).result) {
             assertEquals(2, this.selectTape().second)
         }
 
-        val secondState = State.loadState(stateFile)
+        val secondState = State.loadState(stateFile).result
         val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState)
         State.saveState(stateFile, thirdState)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
@@ -88,9 +90,31 @@ class JebSpec {
         forSameFiles(backup3, backup4, ::inodesShouldBeEqual)
     }
 
+    @Test
+    fun notExistingConfig() {
+        val out = ByteArrayOutputStream()
+        System.setOut(PrintStream(out))
+        val configPath = "${baseDir.absolutePath}/not-existing"
+        main(arrayOf("backup", configPath))
+        assertEquals("jeb-k config is not found at $configPath/jeb.json", String(out.toByteArray(), 0, out.size()))
+    }
+
+    @Test
+    fun malformedConfig() {
+        val out = ByteArrayOutputStream()
+        System.setOut(PrintStream(out))
+        val configPath = "${baseDir.absolutePath}/malformed"
+        with(File(configPath, "jeb.json")) {
+            parentFile.mkdirs()
+            writeText("{}")
+        }
+        main(arrayOf("backup", configPath))
+        assertEquals("jeb-k config at $configPath/jeb.json is malformed", String(out.toByteArray(), 0, out.size()))
+    }
+
     @After
     fun tearDown() {
-        //baseDir.deleteRecursively()
+        baseDir.deleteRecursively()
     }
 }
 
