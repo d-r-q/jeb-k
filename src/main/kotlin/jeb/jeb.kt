@@ -2,11 +2,12 @@ package jeb
 
 import com.fasterxml.jackson.databind.JsonMappingException
 import jeb.util.Try
+import java.io.BufferedReader
 import java.io.File
 import java.time.LocalDateTime
 import javax.swing.JOptionPane
 
-val usage = "Usage: java jeb.jeb <init|backup <dir>>"
+val usage = "Usage: jeb-k <init|backup <dir>>"
 
 public fun main(args: Array<String>) {
     when {
@@ -18,12 +19,12 @@ public fun main(args: Array<String>) {
 }
 
 fun init() {
-    val sourceDir = with(readLine("Source directory: ")) {
-        if (this.endsWith('/')) this else "$this/"
-    }
+    val currentDir = System.getProperty("user.dir").withTailingSlash()
+    val sourceDir = readLine("Source directory", currentDir).withTailingSlash()
 
-    val backupDir = readLine("Backups directory: ")
-    val disksCount = readLine("Backups count: ").toInt()
+    val backupDirDefault = if (File(currentDir) != File(sourceDir)) currentDir else null
+    val backupDir = readLine("Backups directory", backupDirDefault)
+    val disksCount = readLine("Backups count", "10").toInt()
 
     val state = State(backupDir, sourceDir, Hanoi(disksCount))
     State.saveState(File(backupDir, "jeb.json"), state)
@@ -58,8 +59,19 @@ private fun doBackup(config: File, state: State, time: LocalDateTime) {
 }
 
 // Hack for tests: do not recreate buffered reader on each call
-val inReader by lazy { System.`in`.bufferedReader() }
-private fun readLine(invitation: String): String {
-    print(invitation)
-    return inReader.readLine()
+var inReader: BufferedReader? = null
+    get() {
+        if (field == null) field = System.`in`.bufferedReader()
+        return field
+    }
+
+private fun readLine(invitation: String, default: String?): String {
+    val defaultMsg =
+            if (default != null) " [Leave empty to use $default]"
+            else ""
+    print("$invitation$defaultMsg:")
+    val line = inReader!!.readLine()
+    return if (line.length > 0 || default == null) line else default
 }
+
+private fun String.withTailingSlash() = if (this.endsWith("/")) this else this + "/"

@@ -42,6 +42,7 @@ class JebSpec {
                 "${backupsDir.absolutePath}\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
         main(arrayOf("init"))
 
         val state = State.loadState(stateFile).result
@@ -110,6 +111,53 @@ class JebSpec {
         }
         main(arrayOf("backup", configPath))
         assertEquals("jeb-k config at $configPath/jeb.json is malformed", String(out.toByteArray(), 0, out.size()))
+    }
+
+    @Test
+    fun useDefaultSourceDir() {
+        val testBaseDir = File(baseDir, "default-source-dir")
+        val testBackupsDir = File(testBaseDir, "backups")
+        testBackupsDir.mkdirs()
+        System.setProperty("user.dir", File(testBaseDir, "source").absolutePath)
+        val userInput = "\n" +
+                "${testBackupsDir.absolutePath}\n" +
+                "10\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+        val state = State.loadState(File(testBackupsDir, "jeb.json")).result
+        assertEquals(File(testBaseDir, "source").absolutePath + "/", state.source)
+    }
+
+    @Test
+    fun useDefaultBackupsDir() {
+        val testBaseDir = File(baseDir, "default-backups-dir")
+        val testBackupsDir = File(testBaseDir, "backups")
+        testBackupsDir.mkdirs()
+        System.setProperty("user.dir", testBackupsDir.absolutePath)
+        val userInput = "${File(testBaseDir, "sources")}\n" +
+                "\n" +
+                "10\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+        val state = State.loadState(File(testBackupsDir, "jeb.json")).result
+        assertEquals(testBackupsDir.absolutePath + "/", state.backupsDir)
+    }
+
+    @Test
+    fun useDefaultBackupsCountDir() {
+        val testBaseDir = File(baseDir, "default-backups-dir")
+        val testBackupsDir = File(testBaseDir, "backups")
+        testBackupsDir.mkdirs()
+        val userInput = "${File(testBaseDir, "sources")}\n" +
+                "$testBackupsDir\n" +
+                "\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+        val state = State.loadState(File(testBackupsDir, "jeb.json")).result
+        assertEquals(10, state.lastTapeNumber)
     }
 
     @After
