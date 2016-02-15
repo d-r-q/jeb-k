@@ -9,7 +9,7 @@ import javax.swing.JOptionPane
 
 val usage = "Usage: jeb-k <init|backup <dir>>"
 
-public fun main(args: Array<String>) {
+fun main(args: Array<String>) {
     when {
         args.size == 0 -> println(usage)
         args[0] == "init" -> init()

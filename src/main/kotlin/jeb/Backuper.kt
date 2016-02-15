@@ -12,7 +12,7 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
-    public fun doBackup(state: State): State {
+    fun doBackup(state: State): State {
         if (storage.fileExists(File(state.backupsDir), { isTape(it, state) && modifiedToday(it) })) {
             log.info("Tape modified today exists, so halt backup")
             return state
