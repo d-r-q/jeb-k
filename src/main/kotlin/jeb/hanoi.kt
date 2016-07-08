@@ -1,13 +1,14 @@
 package jeb
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.slf4j.LoggerFactory
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Hanoi private constructor(
-        val pegs: List<List<Int>>,
-        val step: Int) {
+        @JsonProperty("pegs") val pegs: List<List<Int>>,
+        @JsonProperty("step") val step: Int) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 

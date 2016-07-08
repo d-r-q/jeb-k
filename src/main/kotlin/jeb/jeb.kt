@@ -33,7 +33,7 @@ fun init() {
 fun backup(backupDir: File, time: LocalDateTime) {
     val config = File(backupDir, "jeb.json")
     if (!config.exists()) {
-        print("jeb-k config is not found at ${config.absolutePath}")
+        println("jeb-k config is not found at ${config.absolutePath}")
         return
     }
 
@@ -42,7 +42,8 @@ fun backup(backupDir: File, time: LocalDateTime) {
         is Try.Success -> doBackup(config, state.result, time)
         is Try.Failure ->
             if (state.reason is JsonMappingException) {
-                print("jeb-k config at ${config.absolutePath} is malformed")
+                println("Could not load jeb-k config from ${config.absolutePath}")
+                state.reason.printStackTrace()
             } else {
                 throw state.reason
             }

@@ -97,7 +97,7 @@ class JebSpec {
         System.setOut(PrintStream(out))
         val configPath = "${baseDir.absolutePath}/not-existing"
         main(arrayOf("backup", configPath))
-        assertEquals("jeb-k config is not found at $configPath/jeb.json", String(out.toByteArray(), 0, out.size()))
+        assertEquals("jeb-k config is not found at $configPath/jeb.json", String(out.toByteArray(), 0, out.size()).trim())
     }
 
     @Test
@@ -110,7 +110,7 @@ class JebSpec {
             writeText("{}")
         }
         main(arrayOf("backup", configPath))
-        assertEquals("jeb-k config at $configPath/jeb.json is malformed", String(out.toByteArray(), 0, out.size()))
+        assertEquals("Could not load jeb-k config from $configPath/jeb.json", String(out.toByteArray(), 0, out.size()).trim())
     }
 
     @Test

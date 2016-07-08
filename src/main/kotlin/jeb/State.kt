@@ -1,6 +1,7 @@
 package jeb
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.paranamer.ParanamerModule
@@ -8,9 +9,9 @@ import jeb.util.Try
 import java.io.File
 
 data class State @JsonCreator constructor(
-        val backupsDir: String,
-        val source: String,
-        private val hanoi: Hanoi) {
+        @JsonProperty("backupsDir") val backupsDir: String,
+        @JsonProperty("source") val source: String,
+        @JsonProperty("hanoi") private val hanoi: Hanoi) {
 
     val lastTapeNumber = hanoi.largestDisc
 
