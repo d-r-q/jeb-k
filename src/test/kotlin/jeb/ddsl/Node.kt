@@ -2,7 +2,7 @@ package jeb.ddsl
 
 import java.io.File
 
-abstract class Node(protected val name: File) {
+abstract class Node(val name: File) {
 
     abstract fun create()
 

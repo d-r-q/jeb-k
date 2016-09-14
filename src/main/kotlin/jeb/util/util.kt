@@ -1,6 +1,6 @@
 package jeb.util
 
-sealed abstract class Try<out R> {
+sealed class Try<out R> {
 
     class Success<out R>(override val result: R) : Try<R>()
 
