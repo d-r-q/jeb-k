@@ -1,12 +1,11 @@
 package jeb
 
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.*
 
 open class Storage {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = jeb.log
 
     open fun lastModified(dir: File, predicate: (File) -> Boolean) = dir.
             listFiles().

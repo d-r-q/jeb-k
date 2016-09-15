@@ -1,6 +1,5 @@
 package jeb
 
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -10,7 +9,7 @@ import kotlin.text.Regex
 
 class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = jeb.log
 
     fun doBackup(state: State): State {
         if (storage.fileExists(File(state.backupsDir), { isTape(it, state) && modifiedToday(it) })) {

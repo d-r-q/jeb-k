@@ -3,14 +3,13 @@ package jeb
 import jeb.cfg.Json
 import jeb.cfg.toJson
 import jeb.util.Try
-import org.slf4j.LoggerFactory
 import java.util.*
 
 data class Hanoi private constructor(
         val pegs: List<List<Int>>,
         val step: Int) {
 
-    private val log = LoggerFactory.getLogger(javaClass)
+    private val log = jeb.log
 
     private val disks = pegs.fold(hashSetOf<Int>()) { acc, e -> acc.addAll(e); acc }.sortedDescending()
 
