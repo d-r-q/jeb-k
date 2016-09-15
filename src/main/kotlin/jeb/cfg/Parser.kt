@@ -5,13 +5,13 @@ import java.util.*
 
 object Parser {
 
-    fun parse(input: String): Try<Json> = Try.Success(parseObject(Scanner(input)))
+    fun parse(input: String): Try<Json.Object> = Try.Success(parseObject(Scanner(input)))
 
-    private fun parseObject(input: Scanner): Json {
+    private fun parseObject(input: Scanner): Json.Object {
         input.expect('{')
 
-        val fields = HashSet<Pair<String, Json>>()
-        val firstField: Pair<String, Json>? = when (input.current()) {
+        val fields = LinkedHashSet<Pair<String, Json<*>>>()
+        val firstField: Pair<String, Json<*>>? = when (input.current()) {
             '\"' -> parseField(input)
             '}' -> null
             else -> throw ParseException("Unexpected char: ${input.current()}")
@@ -24,17 +24,17 @@ object Parser {
         }
 
         input.expect('}')
-        return Json.Object(fields.toMap())
+        return Json.Object(fields.toMap(LinkedHashMap()))
     }
 
-    private fun parseField(input: Scanner): Pair<String, Json> {
+    private fun parseField(input: Scanner): Pair<String, Json<*>> {
         val name = parseStringLiteral(input)
         input.expect(':')
         val value = parseValue(input)
         return Pair(name.value, value)
     }
 
-    private fun parseValue(input: Scanner): Json {
+    private fun parseValue(input: Scanner): Json<*> {
         val value = when (input.current()) {
             '"' -> parseStringLiteral(input)
             '{' -> parseObject(input)
@@ -69,7 +69,7 @@ object Parser {
 
     private fun parseArray(input: Scanner): Json.Array {
         input.expect('[')
-        val items = ArrayList<Json>()
+        val items = ArrayList<Json<*>>()
         if (input.swallow(']')) {
             return Json.Array(items)
         }
