@@ -1,6 +1,5 @@
 package jeb
 
-import com.fasterxml.jackson.databind.JsonMappingException
 import jeb.util.Try
 import java.io.BufferedReader
 import java.io.File
@@ -40,13 +39,7 @@ fun backup(backupDir: File, time: LocalDateTime) {
     val state = State.loadState(config)
     when (state) {
         is Try.Success -> doBackup(config, state.result, time)
-        is Try.Failure ->
-            if (state.reason is JsonMappingException) {
-                println("Could not load jeb-k config from ${config.absolutePath}")
-                state.reason.printStackTrace()
-            } else {
-                throw state.reason
-            }
+        is Try.Failure -> println(state.reason.message)
     }
 }
 

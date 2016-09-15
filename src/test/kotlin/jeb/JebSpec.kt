@@ -105,12 +105,13 @@ class JebSpec {
         val out = ByteArrayOutputStream()
         System.setOut(PrintStream(out))
         val configPath = "${baseDir.absolutePath}/malformed"
-        with(File(configPath, "jeb.json")) {
+        val configFile = File(configPath, "jeb.json")
+        with(configFile) {
             parentFile.mkdirs()
             writeText("{}")
         }
         main(arrayOf("backup", configPath))
-        assertEquals("Could not load jeb-k config from $configPath/jeb.json", String(out.toByteArray(), 0, out.size()).trim())
+        assertEquals("Invalid config file: \"{}\" ($configFile)", String(out.toByteArray(), 0, out.size()).trim())
     }
 
     @Test

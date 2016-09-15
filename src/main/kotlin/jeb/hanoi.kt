@@ -1,14 +1,14 @@
 package jeb
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import jeb.cfg.Json
+import jeb.cfg.toJson
+import jeb.util.Try
 import org.slf4j.LoggerFactory
 import java.util.*
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class Hanoi private constructor(
-        @JsonProperty("pegs") val pegs: List<List<Int>>,
-        @JsonProperty("step") val step: Int) {
+        val pegs: List<List<Int>>,
+        val step: Int) {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
@@ -23,6 +23,34 @@ data class Hanoi private constructor(
     val largestDisc = disks.first()
 
     constructor(disksCount: Int) : this(listOf(createPeg(disksCount), emptyList(), emptyList()), 0)
+
+    companion object {
+
+        fun from(hanoiJson: Json.Object): Try<Hanoi> {
+            val pegs = hanoiJson["pegs"]
+            if (pegs !is Json.Array) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+
+            val firstPeg = pegs[0]
+            if (firstPeg !is Json.Array) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+            if (firstPeg.any { it !is Json.Integer }) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+
+            val secondPeg = pegs[1]
+            if (secondPeg !is Json.Array) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+            if (secondPeg.any { it !is Json.Integer }) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+
+            val thirdPeg = pegs[2]
+            if (thirdPeg !is Json.Array) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+            if (thirdPeg.any { it !is Json.Integer }) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+
+            val stepJson = hanoiJson["step"]
+            if (stepJson !is Json.Integer) return Try.Failure(RuntimeException("Invalid hanoi json representation: ${hanoiJson.toString()}"))
+
+            return Try.Success(Hanoi(
+                    listOf(firstPeg.map { (it as Json.Integer).value }, secondPeg.map { (it as Json.Integer).value }, thirdPeg.map { (it as Json.Integer).value }),
+                    stepJson.value))
+        }
+
+    }
 
     fun reset() = Hanoi(disks.size)
 
@@ -51,6 +79,12 @@ data class Hanoi private constructor(
     }
 
     operator fun get(pegIdx: Int) = pegs[pegIdx]
+
+    fun toJson(): Json.Object = Json.Object(linkedMapOf(
+            "pegs" to pegs.toJson(),
+            "step" to step.toJson(),
+            "done" to done.toJson(),
+            "largestDisc" to largestDisc.toJson()))
 }
 
 private operator fun List<Int>.compareTo(another: List<Int>) = when {

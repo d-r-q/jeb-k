@@ -1,17 +1,15 @@
 package jeb
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonMappingException
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.paranamer.ParanamerModule
+import jeb.cfg.Json
+import jeb.cfg.Parser
+import jeb.cfg.toJson
 import jeb.util.Try
 import java.io.File
 
-data class State @JsonCreator constructor(
-        @JsonProperty("backupsDir") val backupsDir: String,
-        @JsonProperty("source") val source: String,
-        @JsonProperty("hanoi") private val hanoi: Hanoi) {
+data class State constructor(
+        val backupsDir: String,
+        val source: String,
+        private val hanoi: Hanoi) {
 
     val lastTapeNumber = hanoi.largestDisc
 
@@ -27,24 +25,37 @@ data class State @JsonCreator constructor(
 
     companion object {
 
-        private val objectMapper = ObjectMapper().
-                registerModule(ParanamerModule())
 
         @JvmStatic fun loadState(configFile: File): Try<State> {
-            return try{
-                Try.Success(objectMapper.readValue(configFile.readText(), State::class.java))
-            } catch (e: JsonMappingException) {
-                Try.Failure(e)
-            }
+            val config = configFile.readText()
+            val cfgJson = Parser.parse(config)
+            if (cfgJson is Try.Failure) return Try.Failure(cfgJson.reason)
+
+            val cfg = cfgJson.result
+            if (cfg !is Json.Object) return Try.Failure(RuntimeException("Invalid config file: \"$config\" (${configFile.absolutePath})"))
+
+            val backupsJson = cfg["backupsDir"]
+            if (backupsJson !is Json.String) return Try.Failure(RuntimeException("Invalid config file: \"$config\" (${configFile.absolutePath})"))
+
+            val sourceJson = cfg["source"]
+            if (sourceJson !is Json.String) return Try.Failure(RuntimeException("Invalid config file: \"$config\" (${configFile.absolutePath})"))
+
+            val hanoiJson = cfg["hanoi"]
+            if (hanoiJson !is Json.Object) return Try.Failure(RuntimeException("Invalid config file: \"$config\" (${configFile.absolutePath})"))
+
+            val hanoi = Hanoi.from(hanoiJson)
+            if (hanoi is Try.Failure) return Try.Failure(hanoi.reason)
+
+            return Try.Success(State(backupsJson.value, sourceJson.value, hanoi.result))
         }
 
         @JvmStatic fun saveState(configFile: File, state: State) {
             configFile.parentFile.mkdirs()
-            val stateMap = mapOf(
-                    "backupsDir" to state.backupsDir,
-                    "source" to state.source,
-                    "hanoi" to state.hanoi)
-            configFile.writeText(objectMapper.writeValueAsString(stateMap))
+            val stateJson = Json.Object(linkedMapOf(
+                    "backupsDir" to state.backupsDir.toJson(),
+                    "source" to state.source.toJson(),
+                    "hanoi" to state.hanoi.toJson()))
+            configFile.writeText(stateJson.toString())
         }
     }
 

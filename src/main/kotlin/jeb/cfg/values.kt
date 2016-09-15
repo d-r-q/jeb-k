@@ -12,7 +12,7 @@ sealed class Json<T : Any>(protected open val value: T) {
 
     }
 
-    class Integer(value: Int) : Json<Int>(value) {
+    class Integer(override public val value: Int) : Json<Int>(value) {
 
         override fun toString() = value.toString()
 
@@ -38,14 +38,12 @@ sealed class Json<T : Any>(protected open val value: T) {
 
     }
 
-    class Array(private val items: List<Json<*>>) : Json<List<Json<*>>>(items) {
-
-        operator fun get(idx: Int) = items[idx]
+    class Array(private val items: List<Json<*>>) : Json<List<Json<*>>>(items), List<Json<*>> by items {
 
         override fun toString(): KString = items.joinToString(",", "[", "]")
 
         override fun compareValue(other: List<Json<*>>): kotlin.Boolean {
-            return items.zip(items).all { it.first == it.second}
+            return items.zip(items).all { it.first == it.second }
         }
 
     }
@@ -56,7 +54,7 @@ sealed class Json<T : Any>(protected open val value: T) {
 
     }
 
-    override fun equals(other: Any?): kotlin.Boolean{
+    override fun equals(other: Any?): kotlin.Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
 
@@ -66,7 +64,7 @@ sealed class Json<T : Any>(protected open val value: T) {
         return compareValue(otherValue)
     }
 
-    override fun hashCode(): Int{
+    override fun hashCode(): Int {
         return value.hashCode()
     }
 
@@ -74,5 +72,15 @@ sealed class Json<T : Any>(protected open val value: T) {
         return value == other
     }
 
+}
+
+fun Any.toJson(): Json<*> {
+    return when (this) {
+        is KString -> Json.String(this)
+        is Int -> Json.Integer(this)
+        is KBoolean -> if (this) Json.True else Json.False
+        is List<*> -> Json.Array(this.map { it!!.toJson() })
+        else -> throw IllegalStateException("Could not render to json instances of ${this.javaClass}")
+    }
 }
 
