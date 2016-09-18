@@ -46,7 +46,7 @@ class JebSpec {
         main(arrayOf("init"))
 
         val state = State.loadState(stateFile).result
-        assertEquals(srcDir.absolutePath + "/", state.source)
+        assertEquals(srcDir.absolutePath + "/", state.source.first())
         assertEquals(backupsDir.absolutePath, state.backupsDir)
         assertEquals(10, state.lastTapeNumber)
 
@@ -127,7 +127,7 @@ class JebSpec {
         jeb.inReader = null
         main(arrayOf("init"))
         val state = State.loadState(File(testBackupsDir, "jeb.json")).result
-        assertEquals(File(testBaseDir, "source").absolutePath + "/", state.source)
+        assertEquals(File(testBaseDir, "source").absolutePath + "/", state.source.first())
     }
 
     @Test

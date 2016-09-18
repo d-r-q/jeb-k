@@ -12,7 +12,7 @@ class BackuperSpec extends Specification {
 
     private static final String now = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
     public static final String backupsDir = "/tmp/backups"
-    public static final String sourceDir = "/tmp/source"
+    public static final List<String> sourceDir = ["/tmp/source"]
     public static final File newBackupDir = new File(backupsDir, "$now-1")
 
     def "on initial backup, backuper should create new backup, not remove old disk content and move backup into freed disk"() {
@@ -30,7 +30,7 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.fullBackup(new File(sourceDir), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(new File(sourceDir.first()), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         0 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -52,7 +52,7 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.incBackup(new File(sourceDir), existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.incBackup(new File(sourceDir.first()), existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(oldBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -74,7 +74,7 @@ class BackuperSpec extends Specification {
         newState.hanoi.get(0) == [4, 3, 2]
         newState.hanoi.get(1) == [1]
 
-        1 * io.fullBackup(new File(sourceDir), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(new File(sourceDir.first()), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -92,7 +92,7 @@ class BackuperSpec extends Specification {
         then:
         thrown(JebExecException)
 
-        1 * io.fullBackup(new File(sourceDir), _) >> {
+        1 * io.fullBackup(new File(sourceDir.first()), _) >> {
             throw new JebExecException("cmd", "stdout", "stderr", 127, null)
         }
         0 * io.remove(newBackupDir)
@@ -132,7 +132,7 @@ class BackuperSpec extends Specification {
         backuper.doBackup(state)
 
         then:
-        1 * io.incBackup(new File(sourceDir), new File(backupsDir, "$now-2"), {
+        1 * io.incBackup(new File(sourceDir.first()), new File(backupsDir, "$now-2"), {
             it.absolutePath.startsWith("$backupsDir/$now-1-")
         })
         1 * io.move(new File(backupsDir, "$now-1"), new File(backupsDir, "$now-4"))
@@ -172,7 +172,7 @@ class BackuperSpec extends Specification {
         f.mkdirs()
         f.deleteOnExit()
 
-        def s = new State("any", "any", Hanois.createHanoi(13, 0))
+        def s = new State("any", ["any"], Hanois.createHanoi(13, 0))
 
         when:
         def isTape = BackuperKt.isTape(f, s)

@@ -25,7 +25,7 @@ fun init() {
     val backupDir = readLine("Backups directory", backupDirDefault)
     val disksCount = readLine("Backups count", "10").toInt()
 
-    val state = State(backupDir, sourceDir, Hanoi(disksCount))
+    val state = State(backupDir, listOf(sourceDir), Hanoi(disksCount))
     State.saveState(File(backupDir, "jeb.json"), state)
 }
 

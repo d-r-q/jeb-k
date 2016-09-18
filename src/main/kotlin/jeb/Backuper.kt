@@ -21,7 +21,7 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
         log.info("Next tape number = $nextTapeNum")
 
         val lastBackup = storage.lastModified(File(state.backupsDir), { isTape(it, state) })
-        val fromDir = File(state.source)
+        val fromDir = File(state.source.first())
         val lastTape = storage.findOne(File(state.backupsDir), fileForTape(state, state.lastTapeNumber)) ?: File(state.backupsDir, toFileName(state.lastTapeNumber))
         val tape = File(state.backupsDir, toFileName(nextTapeNum))
         val prevTape = storage.findOne(File(state.backupsDir), fileForTape(state, nextTapeNum))

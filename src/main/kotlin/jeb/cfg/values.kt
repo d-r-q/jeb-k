@@ -45,6 +45,10 @@ sealed class Json<out T : Any>(protected open val value: T,
 
         override fun toString(): KString = items.joinToString(",", "[", "]")
 
+        inline fun <reified T> toListOf(): List<T> {
+            return map { it.value as T }
+        }
+
         companion object {
             val compareValue: (List<Json<*>>, List<Json<*>>) -> kotlin.Boolean = { value, other ->
                 value.zip(value).all { it.first == it.second }
