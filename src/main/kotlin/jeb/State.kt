@@ -8,7 +8,7 @@ import java.io.File
 
 data class State constructor(
         val backupsDir: String,
-        val source: List<String>,
+        val source: List<Source>,
         private val hanoi: Hanoi) {
 
     val lastTapeNumber = hanoi.largestDisc
@@ -53,11 +53,11 @@ data class State constructor(
             val hanoi = Hanoi.from(hanoiJson)
             if (hanoi is Try.Failure) return Try.Failure(hanoi.reason)
 
-            val source: List<String> = when (sourceJson) {
+            val source: List<Source> = when (sourceJson) {
                 is Json.String -> listOf(sourceJson.value)
                 is Json.Array -> sourceJson.toListOf<String>()
                 else -> throw RuntimeException("Unknown source type: ${sourceJson.javaClass}")
-            }
+            }.map { Source(it) }
 
             return Try.Success(State(backupsJson.value, source, hanoi.result))
         }
@@ -67,7 +67,7 @@ data class State constructor(
             val stateJson = Json.Object(linkedMapOf(
                     "version" to "2".toJson(),
                     "backupsDir" to state.backupsDir.toJson(),
-                    "source" to state.source.toJson(),
+                    "source" to state.source.map { it.absolutePath }.toJson(),
                     "hanoi" to state.hanoi.toJson()))
             configFile.writeText(stateJson.toString())
         }

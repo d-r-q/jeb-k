@@ -25,7 +25,7 @@ class IoSpek : Spek() {init {
         val io = Storage()
         on("copy outer dir") {
 
-            io.fullBackup(outerDir, outerDirCopy)
+            io.fullBackup(Source(outerDir.absolutePath + "/"), outerDirCopy)
 
             it("copy should be equal") {
                 shouldBeTrue(dir.contentEqualTo(outerDirCopy))
@@ -83,7 +83,7 @@ class IoSpek : Spek() {init {
 
         val io = Storage()
         on("sync dir") {
-            io.incBackup(origin, base, backup)
+            io.incBackup(Source(origin.absolutePath + "/"), base, backup)
             it("backup dir should be equal to origin") {
                 shouldBeTrue(originDir.contentEqualTo(backup))
             }

@@ -21,15 +21,15 @@ open class Storage {
 
     open fun remove(f: File) = f.deleteRecursively()
 
-    open fun fullBackup(from: File, to: File) =
+    open fun fullBackup(from: Source, to: File) =
             rsync(from, null, to)
 
-    open fun incBackup(from: File, base: File, to: File) =
+    open fun incBackup(from: Source, base: File, to: File) =
             rsync(from, base, to)
 
-    private fun rsync(from: File, base: File?, to: File) =
+    private fun rsync(from: Source, base: File?, to: File) =
             try {
-                !"rsync -avh --delete ${ base?.let { "--link-dest=" + it.absolutePath } ?: ""} ${from.absolutePath}/ ${to.absolutePath}"
+                !"rsync -avh --delete ${ base?.let { "--link-dest=" + it.absolutePath } ?: ""} ${from.toRsync()} ${to.absolutePath}"
             } catch (e: JebExecException) {
                 if (e.stderr.contains("vanished") && e.stderr.contains("/.sync/status")) {
                     // it's workaround for case, when service's status file has been changed, while syncing
@@ -58,6 +58,8 @@ open class Storage {
         assert(res.size <= 1, { -> "To many files mathes predicate: $res"})
         return res.firstOrNull()
     }
+
+    private fun Source.toRsync() = this.path.toString() + (if (this.type == BackupType.DIRECTORY) "/" else "")
 
     private operator fun String.not() {
         log.debug("Executing command: $this")

@@ -6,7 +6,7 @@ class StateSpec extends Specification {
 
     def "State should be correctly written to and read from file"() {
         given:
-        def originalState = new State("/backupsDir", ["/sourceDir"], new Hanoi([[1,2,3], [], []], 1))
+        def originalState = new State("/backupsDir", [new Source("/sourceDir")], new Hanoi([[1,2,3], [], []], 1))
         def file = File.createTempFile("jeb", "json")
 
         when:
@@ -26,7 +26,8 @@ class StateSpec extends Specification {
         def loadedState = State.loadState(file)
 
         then:
-        new State("/data/azhidkov/tmp/", ["/home/azhidkov/"], new Hanoi([[10,9,8,7,6,5,4,3,2,1], [], []], 0)) == loadedState.result
+        new State("/data/azhidkov/tmp/", [new Source("/home/azhidkov/")], new Hanoi([[10,9,8,7,6,5,4,3,2,1], [], []], 0)) == loadedState.result
+
     }
 
 }
