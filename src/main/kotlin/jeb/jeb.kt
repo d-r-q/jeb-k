@@ -19,7 +19,7 @@ fun main(args: Array<String>) {
 
 fun init() {
     val currentDir = System.getProperty("user.dir").withTailingSlash()
-    val sourceDir = readLine("Source directory", currentDir).withTailingSlash()
+    val sourceDir = readLine("Source directory", currentDir)
 
     val backupDirDefault = if (File(currentDir) != File(sourceDir)) currentDir else null
     val backupDir = readLine("Backups directory", backupDirDefault)

@@ -38,7 +38,7 @@ class JebSpec {
     @Test
     fun jebFunctionalTest() {
 
-        val userInput = "${srcDir.absolutePath}\r\n" +
+        val userInput = "${srcDir.absolutePath}/\r\n" +
                 "${backupsDir.absolutePath}\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
@@ -136,7 +136,7 @@ class JebSpec {
         val testBackupsDir = File(testBaseDir, "backups")
         testBackupsDir.mkdirs()
         System.setProperty("user.dir", testBackupsDir.absolutePath)
-        val userInput = "${File(testBaseDir, "sources")}\n" +
+        val userInput = "${File(testBaseDir, "sources")}/\n" +
                 "\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
