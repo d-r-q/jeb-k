@@ -26,7 +26,7 @@ class DirDescr(name: File) : Node(name) {
             val files = file.listFiles()
             return files.all { f ->
                 val node = nodes.find { it.name.name == f.name }
-                node != null && node.contentEqualTo(f)
+                node?.contentEqualTo(f) ?: false
             }
         } else {
             return false

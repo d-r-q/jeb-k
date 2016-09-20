@@ -4,11 +4,11 @@ import jeb.ddsl.dir
 import org.jetbrains.spek.api.*
 import java.io.File
 
-class IoSpek : Spek() {init {
+class StorageSpeck : Spek() {init {
 
     val jebDir = File("/tmp/jeb")
 
-    given("Two nested directories with file within each and Io") {
+    given("Two nested directories with file within each") {
         val outerDir = File(jebDir, "outerDir")
         val outerDirCopy = File(jebDir, "outerDirCopy")
         outerDir.deleteRecursively()
@@ -22,10 +22,10 @@ class IoSpek : Spek() {init {
         }
         dir.create()
 
-        val io = Storage()
+        val storage = Storage()
         on("copy outer dir") {
 
-            io.fullBackup(Source(outerDir.absolutePath + "/"), outerDirCopy)
+            storage.fullBackup(listOf(Source(outerDir.absolutePath + "/")), outerDirCopy)
 
             it("copy should be equal") {
                 shouldBeTrue(dir.contentEqualTo(outerDirCopy))
@@ -46,10 +46,10 @@ class IoSpek : Spek() {init {
         }
         dir.create()
 
-        val io = Storage()
+        val storage = Storage()
         on("move dir") {
 
-            io.move(from, to)
+            storage.move(from, to)
 
             it("should be moved") {
                 shouldBeFalse(from.exists())
@@ -81,9 +81,9 @@ class IoSpek : Spek() {init {
             file("deleted") { "deletedContent" }
         }.create()
 
-        val io = Storage()
+        val storage = Storage()
         on("sync dir") {
-            io.incBackup(Source(origin.absolutePath + "/"), base, backup)
+            storage.incBackup(listOf(Source(origin.absolutePath + "/")), base, backup)
             it("backup dir should be equal to origin") {
                 shouldBeTrue(originDir.contentEqualTo(backup))
             }
@@ -94,5 +94,49 @@ class IoSpek : Spek() {init {
                 val backupSame = File(backup, "same")
                 shouldEqual(originSame.inode, backupSame.inode)
                 shouldNotEqual(originNew.inode, backupNew.inode)
-            }}}}}
+            }}}
+
+    given("""Directories a and b with files (a1, a2) and (b1, b2) correspondly
+             and Sources for that directories with type content and directory""") {
+        val a = File(jebDir, "a")
+        val b = File(jebDir, "b")
+        val backup = File(jebDir, "backup2")
+        a.deleteRecursively()
+        b.deleteRecursively()
+        backup.deleteRecursively()
+
+        val aDir = dir(a) {
+            file("a1") { "a1Content" }
+            file("a2") { "a2Content" }
+        }
+        aDir.create()
+        val bDir = dir(b) {
+            file("b1") { "b1Content" }
+            file("b2") { "b2Content" }
+        }
+        bDir.create()
+        val aSource = Source(a, BackupType.CONTENT)
+        val bSoource = Source(b, BackupType.DIRECTORY)
+
+        val storage = Storage()
+        on("sync dirs") {
+            storage.fullBackup(listOf(aSource, bSoource), backup)
+            it("backup directory should contain a1 and a2 files and b dir") {
+                val res = dir(backup) {
+                    dir("a") {
+                        file("a1") { "a1Content" }
+                        file("a2") { "a2Content" }
+                    }
+                    dir("b") {
+                        file("b1") { "b1Content" }
+                        file("b2") { "b2Content" }
+                    }
+
+                }
+                res.contentEqualTo(backup)
+            }}}
+
+}
+}
+
 

@@ -1,5 +1,6 @@
 package jeb
 
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -8,11 +9,13 @@ import java.nio.file.Paths
  * which is used to specify the rsync to copy the folder or its contents.
  * So Source it is path and backup method of this path, which in the current implementation is expressed in presence last slash.
  */
-class Source(val absolutePath: String) {
+class Source private constructor(val path: Path, val type: BackupType) {
 
-    val path: Path = Paths.get(absolutePath)
+    constructor(path: File, type: BackupType) : this(path.toPath(), type)
 
-    val type = if (absolutePath.endsWith("/")) BackupType.DIRECTORY else BackupType.CONTENT
+    constructor(absolutePath: String) : this(Paths.get(absolutePath), backupType(absolutePath))
+
+    val absolutePath = path.toString() + (if (type == BackupType.DIRECTORY) "/" else "")
 
     override fun equals(other: Any?): Boolean{
         if (this === other) return true
@@ -40,3 +43,5 @@ class Source(val absolutePath: String) {
 }
 
 enum class BackupType { DIRECTORY, CONTENT }
+
+fun backupType(absolutePath: String) = if (absolutePath.endsWith("/")) BackupType.DIRECTORY else BackupType.CONTENT

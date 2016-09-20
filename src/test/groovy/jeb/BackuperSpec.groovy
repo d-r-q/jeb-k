@@ -12,13 +12,13 @@ class BackuperSpec extends Specification {
 
     private static final String now = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
     public static final String backupsDir = "/tmp/backups"
-    public static final List<String> sourceDir = [new Source("/tmp/source")]
+    public static final List<String> sources = [new Source("/tmp/source")]
     public static final File newBackupDir = new File(backupsDir, "$now-1")
 
     def "on initial backup, backuper should create new backup, not remove old disk content and move backup into freed disk"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         io.findOne(_, _) >> null
@@ -30,7 +30,7 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.fullBackup(sourceDir.first(), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(sources, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         0 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -38,7 +38,7 @@ class BackuperSpec extends Specification {
     def "when in backups directory already exists some directory, backup should be created on base of this directory"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
         def existingDir = new File(backupsDir, "$now-2")
         def oldBackupDir = new File("any file")
@@ -52,14 +52,14 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.incBackup(sourceDir.first(), existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.incBackup(sources, existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(oldBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
     def "when hanoi is in solved state, backuper should reset it and continue"() {
         given:
-        def state = new State(backupsDir, sourceDir, Hanois.createHanoi(4, 15))
+        def state = new State(backupsDir, sources, Hanois.createHanoi(4, 15))
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         io.fileExists(_) >> true
@@ -74,14 +74,14 @@ class BackuperSpec extends Specification {
         newState.hanoi.get(0) == [4, 3, 2]
         newState.hanoi.get(1) == [1]
 
-        1 * io.fullBackup(sourceDir.first(), { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(sources, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
 
     def "backuper should not remove old disk content, if new backup creation failed"() {
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
         io.lastModified(new File(backupsDir)) >> null
         def backuper = new Backuper(io, LocalDateTime.now())
@@ -92,7 +92,7 @@ class BackuperSpec extends Specification {
         then:
         thrown(JebExecException)
 
-        1 * io.fullBackup(sourceDir.first(), _) >> {
+        1 * io.fullBackup(sources, _) >> {
             throw new JebExecException("cmd", "stdout", "stderr", 127, null)
         }
         0 * io.remove(newBackupDir)
@@ -101,7 +101,7 @@ class BackuperSpec extends Specification {
 
     def "backuper should do nothing, if in backups directory exists subdirectory modified today"() {
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
         io.fileExists(_, _) >> true
         def backuper = new Backuper(io, LocalDateTime.now())
@@ -119,7 +119,7 @@ class BackuperSpec extends Specification {
 
     def "backuper should move old disk content to biggest disk if it's empty, instead of just removing it"() {
 
-        def state = new State(backupsDir, sourceDir, Hanois.createHanoi(4, 2))
+        def state = new State(backupsDir, sources, Hanois.createHanoi(4, 2))
         def io = Mock(Storage)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "$now-4")) >> false
@@ -132,7 +132,7 @@ class BackuperSpec extends Specification {
         backuper.doBackup(state)
 
         then:
-        1 * io.incBackup(sourceDir.first(), new File(backupsDir, "$now-2"), {
+        1 * io.incBackup(sources, new File(backupsDir, "$now-2"), {
             it.absolutePath.startsWith("$backupsDir/$now-1-")
         })
         1 * io.move(new File(backupsDir, "$now-1"), new File(backupsDir, "$now-4"))
@@ -142,7 +142,7 @@ class BackuperSpec extends Specification {
     def "backuper should not prepare tape if it's not exists"() {
 
         given:
-        def state = new State(backupsDir, sourceDir, new Hanoi(4))
+        def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "$now-4")) >> false
