@@ -17,16 +17,17 @@ import kotlin.test.assertTrue
 
 class JebSpec {
 
-    val now = LocalDateTime.now()
-    val nowStr = now.format(DateTimeFormatter.BASIC_ISO_DATE)
-    val tomorrow = now.plusDays(1)
-    val tomorrowStr = tomorrow.format(DateTimeFormatter.BASIC_ISO_DATE)
-    val twoDaysLater = now.plusDays(2)
-    val twoDaysLaterStr = twoDaysLater.format(DateTimeFormatter.BASIC_ISO_DATE)
-    val threeDaysLater = now.plusDays(3)
-    val threeDaysLaterStr = threeDaysLater.format(DateTimeFormatter.BASIC_ISO_DATE)
+    val now: LocalDateTime = LocalDateTime.now()
+    val nowStr: String = now.format(DateTimeFormatter.BASIC_ISO_DATE)
+    val tomorrow: LocalDateTime = now.plusDays(1)
+    val tomorrowStr: String = tomorrow.format(DateTimeFormatter.BASIC_ISO_DATE)
+    val twoDaysLater: LocalDateTime = now.plusDays(2)
+    val twoDaysLaterStr: String = twoDaysLater.format(DateTimeFormatter.BASIC_ISO_DATE)
+    val threeDaysLater: LocalDateTime = now.plusDays(3)
+    val threeDaysLaterStr: String = threeDaysLater.format(DateTimeFormatter.BASIC_ISO_DATE)
     val baseDir = createTempDir("jeb-", "-funct-test")
-    val srcDir = File(baseDir, "source")
+    val srcDir1 = File(baseDir, "source1")
+    val srcDir2 = File(baseDir, "source2")
     val backupsDir = File(baseDir, "backups")
     val backup1 = File(backupsDir, "$nowStr-1")
     val backup2 = File(backupsDir, "$tomorrowStr-2")
@@ -38,7 +39,8 @@ class JebSpec {
     @Test
     fun jebFunctionalTest() {
 
-        val userInput = "${srcDir.absolutePath}\r\n" +
+        val userInput = "${srcDir1.absolutePath}/\n" +
+                "no\n" +
                 "${backupsDir.absolutePath}\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
@@ -46,11 +48,11 @@ class JebSpec {
         main(arrayOf("init"))
 
         val state = State.loadState(stateFile).result
-        assertEquals(srcDir.absolutePath + "/", state.source)
+        assertEquals(Source(srcDir1.absolutePath + "/"), state.source.first())
         assertEquals(backupsDir.absolutePath, state.backupsDir)
         assertEquals(10, state.lastTapeNumber)
 
-        val srcContent = dir(srcDir) {
+        val srcContent = dir(srcDir1) {
             file("file1") {
                 "content1"
             }
@@ -64,9 +66,9 @@ class JebSpec {
 
         main(arrayOf("backup", backupsDir.absolutePath))
         assertTrue(srcContent.contentEqualTo(backup1))
-        forSameFiles(srcDir, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
+        forSameFiles(srcDir1, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
 
-        File(srcDir, "file3").writeText("content3")
+        File(srcDir1, "file3").writeText("content3")
 
         main(arrayOf("backup", backupsDir.absolutePath))
         MatcherAssert.assertThat(backupsDir.listFiles().map { it.name }, Matchers.containsInAnyOrder("$nowStr-1", "jeb.json"))
@@ -89,6 +91,70 @@ class JebSpec {
         val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState)
         State.saveState(stateFile, fifthState)
         forSameFiles(backup3, backup4, ::inodesShouldBeEqual)
+    }
+
+    @Test
+    fun multipleSourcesFunctionalTest() {
+        val userInput = "${srcDir1.absolutePath}\n" +
+                "yes\n" +
+                "${srcDir2.absolutePath}/\n" +
+                "\n" +
+                "${backupsDir.absolutePath}\n" +
+                "10\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+
+        val srcContent1 = dir(srcDir1) {
+            file("file11") {
+                "content11"
+            }
+            dir("dir11") {
+                file("file12") {
+                    "content12"
+                }
+            }
+        }
+        srcContent1.create()
+        val srcContent2 = dir(srcDir2) {
+            file("file21") {
+                "content21"
+            }
+            dir("dir21") {
+                file("file22") {
+                    "content22"
+                }
+            }
+        }
+        srcContent2.create()
+        val backupContent = dir(backup1) {
+            dir("source1") {
+                file("file11") {
+                    "content11"
+                }
+                dir("dir11") {
+                    file("file12") {
+                        "content12"
+                    }
+                }
+            }
+            file("file21") {
+                "content21"
+            }
+            dir("dir21") {
+                file("file22") {
+                    "content22"
+                }
+            }
+        }
+
+        main(arrayOf("backup", backupsDir.absolutePath))
+        assertTrue(backupContent.contentEqualTo(backup1))
+        forSameFiles(srcDir1, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
+
+        val secondState = State.loadState(stateFile).result
+        Backuper(Storage(), tomorrow).doBackup(secondState)
+        forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
     }
 
     @Test
@@ -121,13 +187,14 @@ class JebSpec {
         testBackupsDir.mkdirs()
         System.setProperty("user.dir", File(testBaseDir, "source").absolutePath)
         val userInput = "\n" +
+                "no\n" +
                 "${testBackupsDir.absolutePath}\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
         jeb.inReader = null
         main(arrayOf("init"))
         val state = State.loadState(File(testBackupsDir, "jeb.json")).result
-        assertEquals(File(testBaseDir, "source").absolutePath + "/", state.source)
+        assertEquals(Source(File(testBaseDir, "source").absolutePath + "/"), state.source.first())
     }
 
     @Test
@@ -136,7 +203,8 @@ class JebSpec {
         val testBackupsDir = File(testBaseDir, "backups")
         testBackupsDir.mkdirs()
         System.setProperty("user.dir", testBackupsDir.absolutePath)
-        val userInput = "${File(testBaseDir, "sources")}\n" +
+        val userInput = "${File(testBaseDir, "sources")}/\n" +
+                "no\n" +
                 "\n" +
                 "10\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
@@ -147,11 +215,12 @@ class JebSpec {
     }
 
     @Test
-    fun useDefaultBackupsCountDir() {
+    fun useDefaultBackupsCount() {
         val testBaseDir = File(baseDir, "default-backups-dir")
         val testBackupsDir = File(testBaseDir, "backups")
         testBackupsDir.mkdirs()
         val userInput = "${File(testBaseDir, "sources")}\n" +
+                "no\n" +
                 "$testBackupsDir\n" +
                 "\n"
         System.setIn(ByteArrayInputStream(userInput.toByteArray()))
@@ -159,6 +228,25 @@ class JebSpec {
         main(arrayOf("init"))
         val state = State.loadState(File(testBackupsDir, "jeb.json")).result
         assertEquals(10, state.lastTapeNumber)
+    }
+
+    @Test
+    fun useMultipleSources() {
+        val testBaseDir = File(baseDir, "default-backups-dir")
+        val testBackupsDir = File(testBaseDir, "backups")
+        testBackupsDir.mkdirs()
+        val userInput = "${File(testBaseDir, "source1")}\n" +
+                "yes\n" +
+                "${File(testBaseDir, "source2")}/\n" +
+                "\n" +
+                "$testBackupsDir\n" +
+                "\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+        val state = State.loadState(File(testBackupsDir, "jeb.json")).result
+        assertEquals(Source(File(testBaseDir, "source1").absolutePath), state.source[0])
+        assertEquals(Source(File(testBaseDir, "source2").absolutePath + "/"), state.source[1])
     }
 
     @After

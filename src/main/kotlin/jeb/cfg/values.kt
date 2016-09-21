@@ -4,7 +4,8 @@ import java.util.*
 import kotlin.Boolean as KBoolean
 import kotlin.String as KString
 
-sealed class Json<T : Any>(protected open val value: T) {
+sealed class Json<out T : Any>(protected open val value: T,
+                               private val cmp: (T, T) -> KBoolean = { value, other -> value == other }) {
 
     class String(override public val value: KString) : Json<KString>(value) {
 
@@ -22,7 +23,7 @@ sealed class Json<T : Any>(protected open val value: T) {
 
     object False : Json.Boolean(false)
 
-    class Object(private val fields: LinkedHashMap<KString, Json<*>>) : Json<LinkedHashMap<KString, Json<*>>>(fields) {
+    class Object(private val fields: LinkedHashMap<KString, Json<Any>>) : Json<LinkedHashMap<KString, Json<Any>>>(fields, Json.Object.compareValue) {
 
         operator fun get(key: KString) = fields[key]
 
@@ -30,20 +31,28 @@ sealed class Json<T : Any>(protected open val value: T) {
                 fields.map { "\"${it.key}\":${it.value.toString()}" }.
                         joinToString(",", "{", "}")
 
-        override fun compareValue(other: LinkedHashMap<KString, Json<*>>): kotlin.Boolean {
-            return fields.keys.zip(fields.keys).all {
-                it.first == it.second && fields[it.first] == fields[it.first]
+        companion object {
+            val compareValue: (LinkedHashMap<KString, Json<Any>>, LinkedHashMap<KString, Json<Any>>) -> kotlin.Boolean = { fields, other ->
+                fields.keys.zip(other.keys).all {
+                    it.first == it.second && fields[it.first] == fields[it.first]
+                }
             }
         }
 
     }
 
-    class Array(private val items: List<Json<*>>) : Json<List<Json<*>>>(items), List<Json<*>> by items {
+    class Array(private val items: List<Json<Any>>) : Json<List<Json<Any>>>(items, compareValue), List<Json<Any>> by items {
 
         override fun toString(): KString = items.joinToString(",", "[", "]")
 
-        override fun compareValue(other: List<Json<*>>): kotlin.Boolean {
-            return items.zip(items).all { it.first == it.second }
+        inline fun <reified T> toListOf(): List<T> {
+            return map { it.value as T }
+        }
+
+        companion object {
+            val compareValue: (List<Json<*>>, List<Json<*>>) -> kotlin.Boolean = { value, other ->
+                value.zip(value).all { it.first == it.second }
+            }
         }
 
     }
@@ -61,20 +70,16 @@ sealed class Json<T : Any>(protected open val value: T) {
         @Suppress("UNCHECKED_CAST")
         val otherValue = (other as Json<T>).value
 
-        return compareValue(otherValue)
+        return cmp(value, otherValue)
     }
 
     override fun hashCode(): Int {
         return value.hashCode()
     }
 
-    open protected fun compareValue(other: T): KBoolean {
-        return value == other
-    }
-
 }
 
-fun Any.toJson(): Json<*> {
+fun Any.toJson(): Json<Any> {
     return when (this) {
         is KString -> Json.String(this)
         is Int -> Json.Integer(this)
