@@ -16,7 +16,7 @@ apply plugin: 'kotlin'
 apply plugin: 'groovy'
 apply plugin: 'application'
 
-version = '16.2'
+version = 'NEXT-SNAPSHOT'
 mainClassName = 'jeb.JebKt'
 
 repositories {
