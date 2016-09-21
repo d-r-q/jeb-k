@@ -57,7 +57,7 @@ private fun readSourceDirs(currentDir: String): List<String> {
     val sources = arrayListOf<String>()
     var defaultSourceDir: String? = currentDir
     do {
-        val invitation = if (sources.size == 0) "Source directory (add trailing slash to backup directory content or leave it blank to backup directory)"
+        val invitation = if (sources.size == 0) "Source directory (add trailing slash to backup directory content or leave it blank to backup directory)\n"
         else "Source directory"
         val source = readLine(invitation, defaultSourceDir)
         if (source == defaultSourceDir) {
