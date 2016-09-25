@@ -4,7 +4,6 @@ import jeb.util.Try
 import java.io.BufferedReader
 import java.io.File
 import java.time.LocalDateTime
-import java.util.*
 import javax.swing.JOptionPane
 
 val usage = "Usage: jeb-k <init|backup <dir>>"

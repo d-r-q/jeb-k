@@ -57,7 +57,7 @@ open class Storage {
         val res = dir.
                 listFiles().
                 filter(predicate)
-        assert(res.size <= 1, { -> "To many files mathes predicate: $res"})
+        assert(res.size <= 1, { "To many files matches predicate: $res"})
         return res.firstOrNull()
     }
 
