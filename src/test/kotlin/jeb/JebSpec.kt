@@ -30,6 +30,7 @@ class JebSpec {
     val srcDir2 = File(baseDir, "source2")
     val backupsDir = File(baseDir, "backups")
     val backup1 = File(backupsDir, "$nowStr-1")
+    val backup1_2 = File(backupsDir, "$nowStr-2")
     val backup2 = File(backupsDir, "$tomorrowStr-2")
     val backup3 = File(backupsDir, "$twoDaysLaterStr-1")
     val backup3_10 = File(backupsDir, "$twoDaysLaterStr-10")
@@ -77,18 +78,18 @@ class JebSpec {
         }
 
         val secondState = State.loadState(stateFile).result
-        val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState)
+        val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState, false)
         State.saveState(stateFile, thirdState)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
 
-        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState)
+        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState, false)
         State.saveState(stateFile, forthState)
         forSameFiles(backup2, backup3, ::inodesShouldBeEqual)
         assertEquals(true, backup3_10.exists())
         assertEquals(false, backup1.exists())
         forSameFiles(backup3, backup3_10, ::inodesShouldBeEqual)
 
-        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState)
+        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState, false)
         State.saveState(stateFile, fifthState)
         forSameFiles(backup3, backup4, ::inodesShouldBeEqual)
     }
@@ -153,7 +154,7 @@ class JebSpec {
         forSameFiles(srcDir1, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
 
         val secondState = State.loadState(stateFile).result
-        Backuper(Storage(), tomorrow).doBackup(secondState)
+        Backuper(Storage(), tomorrow).doBackup(secondState, false)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
     }
 
@@ -247,6 +248,35 @@ class JebSpec {
         val state = State.loadState(File(testBackupsDir, "jeb.json")).result
         assertEquals(Source(File(testBaseDir, "source1").absolutePath), state.source[0])
         assertEquals(Source(File(testBaseDir, "source2").absolutePath + "/"), state.source[1])
+    }
+
+    @Test
+    fun forceBackup() {
+        val userInput = "${srcDir1.absolutePath}/\n" +
+                "\n" +
+                "${backupsDir.absolutePath}\n" +
+                "10\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+
+        val srcContent = dir(srcDir1) {
+            file("file1") {
+                "content1"
+            }
+            dir("dir1") {
+                file("file2") {
+                    "content2"
+                }
+            }
+        }
+        srcContent.create()
+
+        main(arrayOf("backup", backupsDir.absolutePath))
+        main(arrayOf("backup", "--force", backupsDir.absolutePath))
+
+        assertTrue(srcContent.contentEqualTo(backup1_2))
+        forSameFiles(backup1, backup1_2, ::inodesShouldBeEqual)
     }
 
     @After

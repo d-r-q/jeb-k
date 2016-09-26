@@ -6,13 +6,21 @@ import java.io.File
 import java.time.LocalDateTime
 import javax.swing.JOptionPane
 
-val usage = "Usage: jeb-k <init|backup <dir>>"
+val usage = "Usage: jeb-k <init|backup [--force] <dir>>"
 
 fun main(args: Array<String>) {
     when {
         args.size == 0 -> println(usage)
         args[0] == "init" -> init()
-        args[0] == "backup" -> backup(File(args[1]), LocalDateTime.now())
+        args[0] == "backup" -> {
+            val force = args[1] == "--force"
+            val dir = if (force) {
+                args[2]
+            } else {
+                args[1]
+            }
+            backup(File(dir), LocalDateTime.now(), force)
+        }
         else -> println(usage)
     }
 }
@@ -29,7 +37,7 @@ fun init() {
     State.saveState(File(backupDir, "jeb.json"), state)
 }
 
-private fun backup(backupDir: File, time: LocalDateTime) {
+private fun backup(backupDir: File, time: LocalDateTime, force: Boolean) {
     val config = File(backupDir, "jeb.json")
     if (!config.exists()) {
         println("jeb-k config is not found at ${config.absolutePath}")
@@ -38,14 +46,14 @@ private fun backup(backupDir: File, time: LocalDateTime) {
 
     val state = State.loadState(config)
     when (state) {
-        is Try.Success -> doBackup(config, state.result, time)
+        is Try.Success -> doBackup(config, state.result, time, force)
         is Try.Failure -> println(state.reason.message)
     }
 }
 
-private fun doBackup(config: File, state: State, time: LocalDateTime) {
+private fun doBackup(config: File, state: State, time: LocalDateTime, force: Boolean) {
     try {
-        val newState = Backuper(Storage(), time).doBackup(state)
+        val newState = Backuper(Storage(), time).doBackup(state, force)
         State.saveState(config, newState)
     } catch(e: JebExecException) {
         JOptionPane.showMessageDialog(null, e.toString(), "title", JOptionPane.ERROR_MESSAGE)

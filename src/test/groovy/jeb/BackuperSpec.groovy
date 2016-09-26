@@ -26,7 +26,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state)
+        backuper.doBackup(state, false)
 
         then:
 
@@ -48,7 +48,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state)
+        backuper.doBackup(state, false)
 
         then:
 
@@ -68,7 +68,7 @@ class BackuperSpec extends Specification {
         def newBackupDir = new File(backupsDir, "$now-1")
 
         when:
-        def newState = backuper.doBackup(state)
+        def newState = backuper.doBackup(state, false)
 
         then:
         newState.hanoi.get(0) == [4, 3, 2]
@@ -87,7 +87,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state)
+        backuper.doBackup(state, false)
 
         then:
         thrown(JebExecException)
@@ -107,7 +107,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        def newState = backuper.doBackup(state)
+        def newState = backuper.doBackup(state, false)
 
         then:
         newState == state
@@ -129,7 +129,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state)
+        backuper.doBackup(state, false)
 
         then:
         1 * io.incBackup(sources, new File(backupsDir, "$now-2"), {
@@ -149,7 +149,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state)
+        backuper.doBackup(state, false)
 
         then:
         1 * io.fullBackup(_, _)
@@ -206,4 +206,20 @@ class BackuperSpec extends Specification {
         "2015111-nan"  | false
 
     }
+
+    def "There're should be possibility to do force backup"() {
+        given:
+        def state = new State(backupsDir, sources, Hanois.createHanoi(4, 1))
+        def io = Mock(Storage)
+        io.fileExists(_, _) >> true
+        def backuper = new Backuper(io, LocalDateTime.now())
+
+        when:
+        backuper.doBackup(state, true)
+
+        then:
+        1 * io.fullBackup(_, _)
+        1 * io.move(_, new File(backupsDir, "$now-2"))
+    }
+
 }
