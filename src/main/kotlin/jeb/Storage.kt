@@ -1,6 +1,7 @@
 package jeb
 
 import java.io.File
+import java.nio.file.Paths
 import java.util.*
 
 open class Storage {
@@ -27,11 +28,22 @@ open class Storage {
     open fun incBackup(from: List<Source>, base: File, to: File) =
             rsync(from, base, to)
 
-    private fun rsync(from: List<Source>, base: File?, to: File) =
+    private fun rsync(sources: List<Source>, base: File?, dest: File) =
             try {
-                val sources = from.map { toRsync(it) }.
-                        joinToString(" ")
-                !"rsync -avh --delete ${base?.let { "--link-dest=" + it.absolutePath } ?: ""} $sources ${to.absolutePath}"
+                // when single file is passed as source to rsync, then it's interprets
+                // destination as full file name and do not create parent directory
+                // but when sources is more than one or it's a directory, then it's
+                // interprets destination as parent directory and creates it
+                val (from, to) =
+                        if (sources.size > 1 || sources.first().path.toFile().isDirectory) {
+                            Pair(sources.map { toRsync(it) }.joinToString(" "),
+                                    dest.absolutePath)
+                        } else {
+                            dest.absoluteFile.mkdirs()
+                            Pair(sources.first().absolutePath,
+                                    Paths.get(dest.absolutePath, sources.first().path.fileName.toString()))
+                        }
+                !"rsync -avh --delete ${base?.let { "--link-dest=" + it.absolutePath } ?: ""} $from $to"
             } catch (e: JebExecException) {
                 if (e.stderr.contains("vanished") && e.stderr.contains("/.sync/status")) {
                     // it's workaround for case, when service's status file has been changed, while syncing

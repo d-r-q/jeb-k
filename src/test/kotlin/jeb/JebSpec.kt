@@ -279,10 +279,37 @@ class JebSpec {
         forSameFiles(backup1, backup1_2, ::inodesShouldBeEqual)
     }
 
+    @Test
+    fun backupSingleFile() {
+        baseDir.deleteRecursively()
+
+        val userInput = "${srcDir1.absolutePath}/file1\n" +
+                "\n" +
+                "${backupsDir.absolutePath}\n" +
+                "10\n"
+        System.setIn(ByteArrayInputStream(userInput.toByteArray()))
+        jeb.inReader = null
+        main(arrayOf("init"))
+
+        val srcContent = dir(srcDir1) {
+            file("file1") {
+                "content1"
+            }
+        }
+        srcContent.create()
+
+        main(arrayOf("backup", backupsDir.absolutePath))
+
+        assertTrue(srcContent.contentEqualTo(backup1))
+        forSameFiles(backup1, backup1_2, ::inodesShouldNotBeEqual)
+    }
+
     @After
     fun tearDown() {
         baseDir.deleteRecursively()
     }
 }
 
+
 private fun inodesShouldBeEqual(file1: File, file2: File) = assertEquals(file1.inode, file2.inode, "Files $file1 & $file2 should be same")
+private fun inodesShouldNotBeEqual(file1: File, file2: File) = assertNotEquals(file1.inode, file2.inode, "Files $file1 & $file2 should be same")
