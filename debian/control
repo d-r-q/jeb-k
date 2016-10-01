@@ -1,0 +1,14 @@
+Source: jeb-k
+Section: contrib/utils
+Priority: optional
+Maintainer: Aleksey Zhidkov <aleksey.zhidkov@gmail.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.4
+Homepage: https://github.com/aleksey-zhidkov/jeb-k
+Vcs-Git: https://github.com/aleksey-zhidkov/jeb-k.git
+
+Package: jeb-k
+Architecture: all
+Depends: java-runtime-headless
+Description: Backups utility
+  Jeb - it's incremental backup tool with exponentially increasing intervals between backups for Unix-based systems (rsync required) It's fork of aleksey-zhidkov/Introduce-Kotlin and rewritten version of aleksey-zhidkov/jeb
