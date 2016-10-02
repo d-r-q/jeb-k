@@ -30,7 +30,7 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.fullBackup(sources, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(sources, null, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         0 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -52,7 +52,7 @@ class BackuperSpec extends Specification {
 
         then:
 
-        1 * io.incBackup(sources, existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.incBackup(sources, null, existingDir, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(oldBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -74,7 +74,7 @@ class BackuperSpec extends Specification {
         newState.hanoi.get(0) == [4, 3, 2]
         newState.hanoi.get(1) == [1]
 
-        1 * io.fullBackup(sources, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
+        1 * io.fullBackup(sources, null, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
         1 * io.move({ it.absolutePath.startsWith(newBackupDir.absolutePath) }, newBackupDir)
     }
@@ -92,7 +92,7 @@ class BackuperSpec extends Specification {
         then:
         thrown(JebExecException)
 
-        1 * io.fullBackup(sources, _) >> {
+        1 * io.fullBackup(sources, null, _) >> {
             throw new JebExecException("cmd", "stdout", "stderr", 127, null)
         }
         0 * io.remove(newBackupDir)
@@ -132,7 +132,7 @@ class BackuperSpec extends Specification {
         backuper.doBackup(state, false)
 
         then:
-        1 * io.incBackup(sources, new File(backupsDir, "$now-2"), {
+        1 * io.incBackup(sources, null, new File(backupsDir, "$now-2"), {
             it.absolutePath.startsWith("$backupsDir/$now-1-")
         })
         1 * io.move(new File(backupsDir, "$now-1"), new File(backupsDir, "$now-4"))
@@ -152,10 +152,10 @@ class BackuperSpec extends Specification {
         backuper.doBackup(state, false)
 
         then:
-        1 * io.fullBackup(_, _)
+        1 * io.fullBackup(_, _, _)
         1 * io.move(_, new File(backupsDir, "$now-1"))
 
-        0 * io.incBackup(_, _, _)
+        0 * io.incBackup(_, _, _, _)
         0 * io.remove(_)
         0 * io.move(_, new File(backupsDir, "$now-4"))
     }
@@ -218,7 +218,7 @@ class BackuperSpec extends Specification {
         backuper.doBackup(state, true)
 
         then:
-        1 * io.fullBackup(_, _)
+        1 * io.fullBackup(_, _, _)
         1 * io.move(_, new File(backupsDir, "$now-2"))
     }
 

@@ -1,6 +1,8 @@
 package jeb
 
 import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -34,7 +36,11 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
             tmpTape=$tmpTape
         """.trimIndent())
 
-        createBackup(from = fromDir, base = lastBackup, to = tmpTape)
+        val excludesFile = Paths.get(state.backupsDir, "excludes.txt").let {
+            if (it.toFile().exists()) it
+            else null
+        }
+        createBackup(from = fromDir, excludesFile = excludesFile, base = lastBackup, to = tmpTape)
         if (prevTape != null) {
             prepareTape(tape = prevTape, lastTape = lastTape)
         }
@@ -44,13 +50,13 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
         return newState
     }
 
-    private fun createBackup(from: List<Source>, base: File?, to: File) {
+    private fun createBackup(from: List<Source>, excludesFile: Path?, base: File?, to: File) {
         if (base == null) {
             log.info("Base backup not found, creating full backup")
-            storage.fullBackup(from, to)
+            storage.fullBackup(from, excludesFile, to)
         } else {
             log.info("Base backup found at $base, creating incremental backup")
-            storage.incBackup(from, base, to)
+            storage.incBackup(from, excludesFile, base, to)
         }
     }
 

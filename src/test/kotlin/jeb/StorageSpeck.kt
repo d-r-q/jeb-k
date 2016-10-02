@@ -25,7 +25,7 @@ class StorageSpeck : Spek() {init {
         val storage = Storage()
         on("copy outer dir") {
 
-            storage.fullBackup(listOf(Source(outerDir.absolutePath + "/")), outerDirCopy)
+            storage.fullBackup(listOf(Source(outerDir.absolutePath + "/")), null, outerDirCopy)
 
             it("copy should be equal") {
                 shouldBeTrue(dir.contentEqualTo(outerDirCopy))
@@ -83,7 +83,7 @@ class StorageSpeck : Spek() {init {
 
         val storage = Storage()
         on("sync dir") {
-            storage.incBackup(listOf(Source(origin.absolutePath + "/")), base, backup)
+            storage.incBackup(listOf(Source(origin.absolutePath + "/")), null, base, backup)
             it("backup dir should be equal to origin") {
                 shouldBeTrue(originDir.contentEqualTo(backup))
             }
@@ -120,7 +120,7 @@ class StorageSpeck : Spek() {init {
 
         val storage = Storage()
         on("sync dirs") {
-            storage.fullBackup(listOf(aSource, bSoource), backup)
+            storage.fullBackup(listOf(aSource, bSoource), null, backup)
             it("backup directory should contain a1 and a2 files and b dir") {
                 val res = dir(backup) {
                     dir("a") {
