@@ -38,7 +38,10 @@ fun init() {
 }
 
 private fun backup(backupDir: File, time: LocalDateTime, force: Boolean) {
-    val config = File(backupDir, "jeb.json")
+    var config = File(backupDir, "jeb.json")
+    if (!config.exists()) {
+        config = backupDir
+    }
     if (!config.exists()) {
         println("jeb-k config is not found at ${config.absolutePath}")
         return
