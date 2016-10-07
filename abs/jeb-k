@@ -1,9 +1,0 @@
-#!/bin/bash
-
-APP_NAME="jeb-k"
-APP_HOME="/usr/share/java/$APP_NAME"
-APP_VERSION=16.3
-
-CLASSPATH=$APP_HOME/jeb-k-$APP_VERSION.jar:$APP_HOME/kotlin-reflect-1.0.0.jar:$APP_HOME/kotlin-stdlib-1.0.0.jar:$APP_HOME/kotlin-runtime-1.0.0.jar
-
-exec java -classpath "$CLASSPATH" jeb.JebKt "$@"
