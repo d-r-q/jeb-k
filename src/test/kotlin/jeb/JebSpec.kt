@@ -79,18 +79,18 @@ class JebSpec {
 
         val secondState = State.loadState(stateFile).result
         val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState, false)
-        State.saveState(stateFile, thirdState)
+        State.saveState(stateFile, thirdState.result!!)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
 
-        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState, false)
-        State.saveState(stateFile, forthState)
+        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState.result!!, false)
+        State.saveState(stateFile, forthState.result!!)
         forSameFiles(backup2, backup3, ::inodesShouldBeEqual)
         assertEquals(true, backup3_10.exists())
         assertEquals(false, backup1.exists())
         forSameFiles(backup3, backup3_10, ::inodesShouldBeEqual)
 
-        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState, false)
-        State.saveState(stateFile, fifthState)
+        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState.result!!, false)
+        State.saveState(stateFile, fifthState.result!!)
         forSameFiles(backup3, backup4, ::inodesShouldBeEqual)
     }
 
@@ -164,7 +164,7 @@ class JebSpec {
         System.setOut(PrintStream(out))
         val configPath = "${baseDir.absolutePath}/not-existing"
         main(arrayOf("backup", configPath))
-        assertEquals("jeb-k config is not found at $configPath/jeb.json", String(out.toByteArray(), 0, out.size()).trim())
+        assertEquals("jeb-k config is not found at $configPath", String(out.toByteArray(), 0, out.size()).trim())
     }
 
     @Test

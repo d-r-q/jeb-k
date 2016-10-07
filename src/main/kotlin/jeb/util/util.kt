@@ -6,6 +6,8 @@ sealed class Try<out R> {
 
     class Failure<out R>(val reason: Throwable) : Try<R>() {
 
+        constructor(msg: String) : this(RuntimeException(msg))
+
         override val result: R
             get() = throw reason
     }

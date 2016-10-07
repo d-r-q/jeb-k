@@ -20,6 +20,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.lastModified(new File(backupsDir)) >> null
         io.findOne(_, _) >> null
         io.findOne(_, _) >> null
@@ -61,6 +62,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, Hanois.createHanoi(4, 15))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.lastModified(new File(backupsDir)) >> null
         io.fileExists(_) >> true
         io.findOne(_, _) >>> [new File("any"), newBackupDir]
@@ -71,8 +73,8 @@ class BackuperSpec extends Specification {
         def newState = backuper.doBackup(state, false)
 
         then:
-        newState.hanoi.get(0) == [4, 3, 2]
-        newState.hanoi.get(1) == [1]
+        newState.result.hanoi.get(0) == [4, 3, 2]
+        newState.result.hanoi.get(1) == [1]
 
         1 * io.fullBackup(sources, null, { it.absolutePath.startsWith(newBackupDir.absolutePath) })
         1 * io.remove(newBackupDir)
@@ -83,6 +85,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.lastModified(new File(backupsDir)) >> null
         def backuper = new Backuper(io, LocalDateTime.now())
 
@@ -103,14 +106,15 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.fileExists(_, _) >> true
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        def newState = backuper.doBackup(state, false)
+        def newState = backuper.doBackup(state, false).result
 
         then:
-        newState == state
+        newState == null
         0 * io.fullBackup(_, _)
         0 * io.incBackup(_, _, _)
         0 * io.remove(_)
@@ -121,6 +125,7 @@ class BackuperSpec extends Specification {
 
         def state = new State(backupsDir, sources, Hanois.createHanoi(4, 2))
         def io = Mock(Storage)
+        io.fileExists(new File(backupsDir)) >> true
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "$now-4")) >> false
         io.fileExists(new File(backupsDir, "$now-1")) >> true
@@ -144,6 +149,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, new Hanoi(4))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.fileExists(_, _) >> false
         io.fileExists(new File(backupsDir, "$now-4")) >> false
         def backuper = new Backuper(io, LocalDateTime.now())
@@ -211,6 +217,7 @@ class BackuperSpec extends Specification {
         given:
         def state = new State(backupsDir, sources, Hanois.createHanoi(4, 1))
         def io = Mock(Storage)
+        io.fileExists(_) >> true
         io.fileExists(_, _) >> true
         def backuper = new Backuper(io, LocalDateTime.now())
 

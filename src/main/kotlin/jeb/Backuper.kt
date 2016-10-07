@@ -1,5 +1,6 @@
 package jeb
 
+import jeb.util.Try
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -13,10 +14,13 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
     private val log = jeb.log
 
-    fun doBackup(state: State, force: Boolean): State {
+    fun doBackup(state: State, force: Boolean): Try<State?> {
+        if (!storage.fileExists(File(state.backupsDir))) {
+            return Try.Failure("Backups directory ${state.backupsDir} does not exists")
+        }
         if (!force && storage.fileExists(File(state.backupsDir), { isTape(it, state) && modifiedToday(it) })) {
             log.info("Tape modified today exists, so halt backup")
-            return state
+            return Try.Success(null)
         }
 
         val (newState, nextTapeNum) = state.selectTape()
@@ -47,7 +51,7 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
         log.info("Moving backup from $tmpTape to $tape")
         storage.move(from = tmpTape, to = tape)
 
-        return newState
+        return Try.Success(newState)
     }
 
     private fun createBackup(from: List<Source>, excludesFile: Path?, base: File?, to: File) {

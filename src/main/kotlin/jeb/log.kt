@@ -12,11 +12,14 @@ interface Log {
 
     fun error(msg: String)
 
+    fun error(t: Throwable)
+
 }
 
 val log: Log = stdLog
 
 object stdLog : Log {
+
     private val level = LogLevel.valueOf(System.getProperty("jeb.log.level", "INFO").toUpperCase())
 
     override fun debug(msg: String) {
@@ -39,6 +42,10 @@ object stdLog : Log {
         if (this.level.ordinal <= level.ordinal) {
             level.out.println(msg)
         }
+    }
+
+    override fun error(t: Throwable) {
+        t.printStackTrace()
     }
 
     private enum class LogLevel(val out: PrintStream) { DEBUG(System.out), INFO(System.out), WARN(System.out), ERROR(System.err) }

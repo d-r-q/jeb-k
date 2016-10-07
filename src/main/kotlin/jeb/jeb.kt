@@ -4,7 +4,6 @@ import jeb.util.Try
 import java.io.BufferedReader
 import java.io.File
 import java.time.LocalDateTime
-import javax.swing.JOptionPane
 
 val usage = "Usage: jeb-k <init|backup [--force] <dir>>"
 
@@ -57,9 +56,12 @@ private fun backup(backupDir: File, time: LocalDateTime, force: Boolean) {
 private fun doBackup(config: File, state: State, time: LocalDateTime, force: Boolean) {
     try {
         val newState = Backuper(Storage(), time).doBackup(state, force)
-        State.saveState(config, newState)
+        when (newState) {
+            is Try.Success -> newState.result?.let { State.saveState(config, it) }
+            is Try.Failure -> log.error(newState.reason)
+        }
     } catch(e: JebExecException) {
-        JOptionPane.showMessageDialog(null, e.toString(), "title", JOptionPane.ERROR_MESSAGE)
+        log.error(e)
     }
 }
 
