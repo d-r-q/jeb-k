@@ -27,7 +27,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, false)
+        backuper.doBackup(state, false, null)
 
         then:
 
@@ -49,7 +49,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, false)
+        backuper.doBackup(state, false, null)
 
         then:
 
@@ -70,7 +70,7 @@ class BackuperSpec extends Specification {
         def newBackupDir = new File(backupsDir, "$now-1")
 
         when:
-        def newState = backuper.doBackup(state, false)
+        def newState = backuper.doBackup(state, false, null)
 
         then:
         newState.result.hanoi.get(0) == [4, 3, 2]
@@ -90,7 +90,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, false)
+        backuper.doBackup(state, false, null)
 
         then:
         thrown(JebExecException)
@@ -111,7 +111,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        def newState = backuper.doBackup(state, false).result
+        def newState = backuper.doBackup(state, false, null).result
 
         then:
         newState == null
@@ -134,7 +134,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, false)
+        backuper.doBackup(state, false, null)
 
         then:
         1 * io.incBackup(sources, null, new File(backupsDir, "$now-2"), {
@@ -155,7 +155,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, false)
+        backuper.doBackup(state, false, null)
 
         then:
         1 * io.fullBackup(_, _, _)
@@ -222,7 +222,7 @@ class BackuperSpec extends Specification {
         def backuper = new Backuper(io, LocalDateTime.now())
 
         when:
-        backuper.doBackup(state, true)
+        backuper.doBackup(state, true, null)
 
         then:
         1 * io.fullBackup(_, _, _)

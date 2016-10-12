@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.PrintStream
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
@@ -78,18 +79,22 @@ class JebSpec {
         }
 
         val secondState = State.loadState(stateFile).result
-        val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState, false)
+        val excludesFile = Paths.get(secondState.backupsDir, "excludes.txt").let {
+            if (it.toFile().exists()) it
+            else null
+        }
+        val thirdState = Backuper(Storage(), tomorrow).doBackup(secondState, false, excludesFile)
         State.saveState(stateFile, thirdState.result!!)
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
 
-        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState.result!!, false)
+        val forthState = Backuper(Storage(), twoDaysLater).doBackup(thirdState.result!!, false, excludesFile)
         State.saveState(stateFile, forthState.result!!)
         forSameFiles(backup2, backup3, ::inodesShouldBeEqual)
         assertEquals(true, backup3_10.exists())
         assertEquals(false, backup1.exists())
         forSameFiles(backup3, backup3_10, ::inodesShouldBeEqual)
 
-        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState.result!!, false)
+        val fifthState = Backuper(Storage(), threeDaysLater).doBackup(forthState.result!!, false, excludesFile)
         State.saveState(stateFile, fifthState.result!!)
         forSameFiles(backup3, backup4, ::inodesShouldBeEqual)
     }
@@ -154,7 +159,10 @@ class JebSpec {
         forSameFiles(srcDir1, backup1) { file1, file2 -> assertNotEquals(file1.inode, file2.inode) }
 
         val secondState = State.loadState(stateFile).result
-        Backuper(Storage(), tomorrow).doBackup(secondState, false)
+        Backuper(Storage(), tomorrow).doBackup(secondState, false, Paths.get(secondState.backupsDir, "excludes.txt").let {
+            if (it.toFile().exists()) it
+            else null
+        })
         forSameFiles(backup1, backup2, ::inodesShouldBeEqual)
     }
 

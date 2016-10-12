@@ -3,6 +3,7 @@ package jeb
 import jeb.util.Try
 import java.io.BufferedReader
 import java.io.File
+import java.nio.file.Paths
 import java.time.LocalDateTime
 
 val usage = "Usage: jeb-k <init|backup [--force] <dir>>"
@@ -55,7 +56,14 @@ private fun backup(backupDir: File, time: LocalDateTime, force: Boolean) {
 
 private fun doBackup(config: File, state: State, time: LocalDateTime, force: Boolean) {
     try {
-        val newState = Backuper(Storage(), time).doBackup(state, force)
+        var excludesFile = Paths.get(state.backupsDir, "excludes.txt")
+        if (!excludesFile.toFile().exists()) {
+            excludesFile = Paths.get(config.parent, "excludes.txt")
+            if (!excludesFile.toFile().exists()) {
+                excludesFile = null
+            }
+        }
+        val newState = Backuper(Storage(), time).doBackup(state, force, excludesFile)
         when (newState) {
             is Try.Success -> newState.result?.let { State.saveState(config, it) }
             is Try.Failure -> log.error(newState.reason)

@@ -3,7 +3,6 @@ package jeb
 import jeb.util.Try
 import java.io.File
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -14,7 +13,7 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
 
     private val log = jeb.log
 
-    fun doBackup(state: State, force: Boolean): Try<State?> {
+    fun doBackup(state: State, force: Boolean, excludesFile: Path?): Try<State?> {
         if (!storage.fileExists(File(state.backupsDir))) {
             return Try.Failure("Backups directory ${state.backupsDir} does not exists")
         }
@@ -40,10 +39,6 @@ class Backuper(private val storage: Storage, private val now: LocalDateTime) {
             tmpTape=$tmpTape
         """.trimIndent())
 
-        val excludesFile = Paths.get(state.backupsDir, "excludes.txt").let {
-            if (it.toFile().exists()) it
-            else null
-        }
         createBackup(from = fromDir, excludesFile = excludesFile, base = lastBackup, to = tmpTape)
         if (prevTape != null) {
             prepareTape(tape = prevTape, lastTape = lastTape)
